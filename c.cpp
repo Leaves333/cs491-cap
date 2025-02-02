@@ -84,6 +84,6 @@ int main() {
         ans = max(ans, d);
     }
 
-    cout << ans << endl;
+    cout << setprecision(12) << ans << endl;
 
 }
