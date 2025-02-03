@@ -1,6 +1,10 @@
-5 5
-Union 1 2
-Union 2 3
-Union 3 4
-Count 3
-Count 5
+5 3 8
+1 1
+1
+1
+1
+2
+3
+4
+5
+6
