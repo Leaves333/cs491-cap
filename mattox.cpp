@@ -50,10 +50,10 @@ int main() {
 
         dist[mattox_x][mattox_y][player_x][player_y] = time;
 
-        cout << "time: " << time;
-        cout << "\tmattox: " << mattox_x << ", " << mattox_y;
-        cout << "\tplayer: " << player_x << ", " << player_y;
-        cout << endl;
+        /*cout << "time: " << time;*/
+        /*cout << "\tmattox: " << mattox_x << ", " << mattox_y;*/
+        /*cout << "\tplayer: " << player_x << ", " << player_y;*/
+        /*cout << endl;*/
 
         if (player_x == mattox_x && player_y == mattox_y) {
             ans = max(ans, time);
