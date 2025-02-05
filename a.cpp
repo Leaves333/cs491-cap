@@ -12,56 +12,40 @@ typedef vector<vi> vvi;
 typedef vector<ll> vll;
 typedef vector<vll> vvll;
 
-struct DSU {
-    vi parent = vi(1000000);
-    vi size = vi(1000000);
-
-    void make_set(int v) {
-        parent[v] = v;
-        size[v] = 1;
-    }
-
-    int find_set(int v) {
-        if (v == parent[v])
-            return v;
-        return parent[v] = find_set(parent[v]);
-    }
-
-    void union_sets(int a, int b) {
-        a = find_set(a);
-        b = find_set(b);
-        if (a != b) {
-            if (size[a] < size[b])
-                swap(a, b);
-            parent[b] = a;
-            size[a] += size[b];
-        }
+struct Node {
+    int val;
+    int num_children;
+    Node *left, *right;
+    Node(int x) {
+        val = x;
+        left = nullptr;
+        right = nullptr;
     }
 };
 
 int main() {
     cin.tie(0)->sync_with_stdio(0);
 
-    int n, m;
-    cin >> n >> m;
+    int n; cin >> n;
+    Node *head = nullptr;
+    
+    while (n--) {
 
-    DSU dsu;
-    for (int i = 0; i < n; i++) {
-        dsu.make_set(i);
-    }
-
-    while (m--) {
         string op;
-        cin >> op;
-        if (op == "Union") {
-            int u, v;
-            cin >> u >> v;
-            dsu.union_sets(--u, --v);
-        } else {
-            int k;
-            cin >> k;
-            int ans = dsu.size[dsu.find_set(--k)];
-            cout << ans << endl;
+        ll x;
+        cin >> op >> x;
+
+        if (op == "Insert") {
+            if (head == nullptr) {
+                head = new Node(x);
+                continue;
+            }
+        } else if (op == "Delete") {
+            
+        } else if (op == "Rank") {
+
+        } else if (op == "Kth") {
+
         }
     }
 }

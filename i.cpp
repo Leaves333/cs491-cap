@@ -12,88 +12,42 @@ typedef vector<vi> vvi;
 typedef vector<ll> vll;
 typedef vector<vll> vvll;
 
-struct DSU {
-    vi parent = vi(100000);
-    vi size = vi(100000);
-
-    void make_set(int v) {
-        parent[v] = v;
-        size[v] = 1;
-    }
-
-    int find_set(int v) {
-        if (v == parent[v])
-            return v;
-        return parent[v] = find_set(parent[v]);
-    }
-
-    void union_sets(int a, int b) {
-        a = find_set(a);
-        b = find_set(b);
-        if (a != b) {
-            if (size[a] < size[b])
-                swap(a, b);
-            parent[b] = a;
-            size[a] += size[b];
-        }
-    }
-};
-
 int main() {
     cin.tie(0)->sync_with_stdio(0);
 
-    int n, q, l;
-    cin >> n >> q >> l;
+    int n;
+    cin >> n;
+    n--;
+    set<int> nodes;
+    int k; cin >> k;
+    nodes.insert(k);
 
-    DSU dsu;
-    vll lengths(n);
-    for (int i = 0; i < n; i++) {
-        cin >> lengths[i];
-        dsu.make_set(i);
-        if (i > 0 && lengths[i-1] > l) {
-            dsu.union_sets(i, i-1);
+    map<int, int> heights;
+    heights[k] = 0;
+
+    while (n--) {
+        int x; cin >> x;
+        auto next = nodes.upper_bound(x); // element after x
+        auto prev = next; // element before x
+        prev--;
+
+        if (next == nodes.end()) {
+            cout << *prev << " ";
+            heights[x] = heights[*prev] + 1;
+        } else if (next == nodes.begin()) {
+            cout << *next << " ";
+            heights[x] = heights[*next] + 1;
+        } else if (heights[*next] > heights[*prev]) {
+            cout << *next << " ";
+            heights[x] = heights[*next] + 1;
+        } else {
+            cout << *prev << " ";
+            heights[x] = heights[*prev] + 1;
         }
+
+        nodes.insert(x);
+
     }
 
-    set<int> tall_parents;
-    for (int i = 0; i < n; i++) {
-        if (lengths[i] > l) {
-            tall_parents.insert(dsu.find_set(i));
-        }
-    }
-
-    while (q--) {
-
-        int c;
-        cin >> c;
-
-        if (c == 1) {
-            int k, h;
-            cin >> k >> h;
-            k--;
-            lengths[k] += h;
-
-            if (lengths[k] > l) {
-                vi before;
-                before.push_back(dsu.find_set(k));
-                if (k > 0 && lengths[k-1] > l) {
-                    before.push_back(dsu.find_set(k-1));
-                    dsu.union_sets(k, k-1);
-                }
-                if (k < n-1 && lengths[k+1] > l) {
-                    before.push_back(dsu.find_set(k+1));
-                    dsu.union_sets(k, k+1);
-                }
-                for (auto x : before) {
-                    tall_parents.erase(x);
-                }
-                tall_parents.insert(dsu.find_set(k));
-            }
-        }
-
-        else {
-            cout << tall_parents.size() << endl;
-        }
-
-    }
+    cout << endl;
 }
