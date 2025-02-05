@@ -115,13 +115,33 @@ int rank_node(Node* root, int x) {
     return ans;
 }
 
-// A utility function to do inorder tree traversal
-void inorder(Node* root) {
-    if (root != NULL) {
-        inorder(root->left);
-        cout << root->val << "\t|\tchildren: " << root->num_children << endl;
-        inorder(root->right);
+int kth(Node* root, int k) {
+
+    if (root == nullptr || k > root->num_children) {
+        return -1;
     }
+
+    Node* cur = root;
+    int total_on_left = 0;
+    if (cur->left != nullptr)
+        total_on_left += cur->left->num_children;
+
+    while (total_on_left != k - 1) {
+        if (total_on_left < k - 1) {
+            cur = cur->right;
+            total_on_left++;
+            if (cur->left != nullptr)
+                total_on_left += cur->left->num_children;
+        } else {
+            cur = cur->left;
+            total_on_left--;
+            if (cur->right != nullptr)
+                total_on_left -= cur->right->num_children;
+        }
+    }
+
+    return cur->val;
+
 }
 
 int main() {
@@ -137,22 +157,14 @@ int main() {
         cin >> op >> x;
 
         if (op == "Insert") {
-            cout << "inserting " << x << "!!!" << endl;
             root = insert(root, x);
-            inorder(root);
-            cout << endl;
         } else if (op == "Delete") {
-            cout << "deleting " << x << "!!!" << endl;
             root = del(root, x);
-            cout << "head is now " << root->val << endl;
-            inorder(root);
-            cout << endl;
         } else if (op == "Rank") {
-            cout << "rank with " << x << "!!!" << endl;
             cout << rank_node(root, x) << endl;
-            cout << endl;
         } else if (op == "Kth") {
-
+            int res = kth(root, x);
+            cout << ((res == -1) ? "Wrong!" : to_string(res)) << endl;
         }
     }
 }
