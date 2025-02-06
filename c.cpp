@@ -13,20 +13,32 @@ typedef vector<ll> vll;
 typedef vector<vll> vvll;
 
 const int NUM_VERTICES = 1001;
+vi original_values(NUM_VERTICES);
 vi values(NUM_VERTICES);
 vi parent(NUM_VERTICES);
 vvi children(NUM_VERTICES);
 
-int dfs(int root, bool find_min) {
-    int ret = values[root];
-    for (auto child : children[root]) {
-        if (find_min)
-            ret = min(ret, values[child]);
-        else
-            ret = max(ret, values[child]);
-        dfs(child, find_min);
+bool validate_bst(int root, int l, int r) {
+    if (values[root] < l || values[root] > r)
+        return false;
+    for (int child : children[root]) {
+        bool res = false;
+        if (original_values[child] > original_values[root]) {
+            res = validate_bst(child, values[root], r);
+        } else {
+            res = validate_bst(child, l, values[root]);
+        }
+        if (!res)
+            return false;
     }
-    return ret;
+    return true;
+}
+
+void modify_tree(int root, int diff) {
+    values[root] += diff;
+    for (int child : children[root]) {
+        modify_tree(child, diff);
+    }
 }
 
 int main() {
@@ -37,6 +49,7 @@ int main() {
 
     for (int i = 1; i <= n; i++) {
         cin >> values[i];
+        original_values[i] = values[i];
     }
 
     for (int i = 2; i <= n; i++) {
@@ -46,42 +59,20 @@ int main() {
     }
 
     while (m--) {
-
         char op;
         int v, k;
         cin >> op >> v >> k;
 
-        int extreme = dfs(v, (op == '-'));
-        int p = parent[v];
-        int parent_value = values[p];
-        while (true) {
-            if (p == 0) {
-                parent_value = -1;
-                break;
-            } else if (op == '-' && parent_value > values[v]) {
-                p = parent[p];
-                parent_value = values[p];
-            } else if (op == '+' && parent_value < values[v]) {
-                p = parent[p];
-                parent_value = values[p];
-            } else {
-                break;
-            }
-        }
-
-        /*cout << "dfs on vertex " << v << "->" << values[v] << ", extreme=" << extreme << endl;*/
-        /*cout << "parent value = " << parent_value << endl;*/
-        /**/
-        if (parent_value == -1) {
-            cout << "YES" << endl;
-        } else if (op == '-' && values[v] > parent_value && extreme - k < parent_value) {
-            cout << "NO" << endl;
-        } else if (op == '+' && values[v] < parent_value && extreme + k > parent_value) {
-            cout << "NO" << endl;
+        if (op == '-') {
+            modify_tree(v, k * -1);
         } else {
-            cout << "YES" << endl;
+            modify_tree(v, k);
         }
 
-        /*cout << endl;*/
+        if (validate_bst(1, INT_MIN, INT_MAX)) {
+            cout << "YES" << endl;
+        } else {
+            cout << "NO" << endl;
+        }
     }
 }
