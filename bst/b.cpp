@@ -1,4 +1,3 @@
-#include <algorithm>
 #pragma optimize("O3")
 
 #include <bits/stdc++.h>
@@ -21,25 +20,27 @@ int main() {
     int first, second;
     cin >> first >> second;
 
-    vi x(first), y(second);
+    map<int, ll> a;
+    map<int, ll> b;
     for (int i = 0; i < first; i++) {
-        cin >> x[i];
+        int x; cin >> x;
+        a[x]++;
     }
     for (int i = 0; i < second; i++) {
-        cin >> y[i];
+        int x; cin >> x;
+        b[x]++;
     }
 
-    sort(x.begin(), x.end());
-    reverse(x.begin(), x.end());
-    sort(y.begin(), y.end());
-    reverse(y.begin(), y.end());
-
-    int a = 0, b = 0;
     ll ans = 0;
-    for (int i = 0; i < k; i++) {
-        ans += x[a] + y[b];
-        if (a >= x.size() - 1) {
-            b++;
+    for (int sum = 200; sum > 1; sum--) {
+        for (int i = 0; i < sum; i++) {
+            ll j = sum - i;
+            ll potential_pairs = a[i] * b[j];
+            ll num_problems = min(k, potential_pairs);
+            ans += num_problems * sum;
+            k -= num_problems;
         }
     }
+
+    cout << ans << endl;
 }
