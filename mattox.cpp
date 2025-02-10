@@ -1,6 +1,5 @@
+#include <algorithm>
 #include <climits>
-#include <cstring>
-#include <iostream>
 #pragma optimize("O3")
 
 #include <bits/stdc++.h>
@@ -15,85 +14,92 @@ typedef vector<vi> vvi;
 typedef vector<ll> vll;
 typedef vector<vll> vvll;
 
+int n, m;
+
+// mx, my, px, py, player_move;
+// for each state, how many moves am i away from winnning?
+ll dist[20][20][20][20][2];
+
+// returns the number of moves until win
+ll search(int mattox_x, int mattox_y, int player_x, int player_y, bool player_move, int moves) {
+
+    cout << "search called with " << mattox_x << " " << mattox_y << " "
+        << player_x << " " << player_y << " " << player_move << " " << moves << endl;
+
+    if (moves > 10) {
+        return -1;
+    }
+
+    if (mattox_x == player_x && mattox_y == player_y) {
+        /*dist[mattox_x][mattox_y][player_x][player_y][player_move] = 0;*/
+        if (player_move)
+            return -1;
+        else
+            return moves;
+    }
+
+    if (dist[mattox_x][mattox_y][player_x][player_y][player_move] != -490) {
+        return dist[mattox_x][mattox_y][player_x][player_y][player_move];
+    }
+
+    int moves_to_here = 0;
+    if (player_move) {
+        int player_changes[8][2] = {{1, 0}, {2, 0}, {-1, 0}, {-2, 0},
+                                    {0, 1}, {0, 2}, {0, -1}, {0, -2}};
+        for (auto c : player_changes) {
+            int new_x = player_x + c[0];
+            int new_y = player_y + c[1];
+            if (new_x < 0 || new_y < 0 || new_x >= n || new_y >= m)
+                continue;
+            int res = search(mattox_x, mattox_y, new_x, new_y, !player_move, moves + 1);
+            if (res != -1)
+                moves_to_here = min(moves_to_here, res);
+        }
+    } else {
+        int mattox_changes[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        for (auto c : mattox_changes) {
+            int new_x = mattox_x + c[0];
+            int new_y = mattox_y + c[1];
+            if (new_x < 0 || new_y < 0 || new_x >= n || new_y >= m)
+                continue;
+            int res = search(new_x, new_y, player_x, player_y, !player_move, moves + 1);
+            if (res != -1)
+                moves_to_here = max(moves_to_here, res);
+        }
+    }
+
+    return moves_to_here;
+}
+
 int main() {
     cin.tie(0)->sync_with_stdio(0);
 
-    int n, m;
     cin >> n >> m;
-
-    ll dist[n][m][n][m];
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < m; j++) {
             for (int x = 0; x < n; x++) {
                 for (int y = 0; y < m; y++) {
-                    dist[i][j][x][y] = LLONG_MAX;
+                    // magic number
+                    dist[i][j][x][y][0] = -490;
+                    dist[i][j][x][y][1] = -490;
                 }
             }
         }
     }
 
-    ll ans = LLONG_MIN;
-
-    priority_queue<pair<ll, array<int, 4>>> pq;
-    pq.push(make_pair(0, array<int, 4>{0, 0, n-1, m-1}));
-
-    while (!pq.empty()) {
-
-        ll time = pq.top().first * -1;
-        auto arr = pq.top().second; // mattox x.y, player x.y
-        pq.pop();
-
-        int mattox_x = arr[0];
-        int mattox_y = arr[1];
-        int player_x = arr[2];
-        int player_y = arr[3];
-
-        dist[mattox_x][mattox_y][player_x][player_y] = time;
-
-        /*cout << "time: " << time;*/
-        /*cout << "\tmattox: " << mattox_x << ", " << mattox_y;*/
-        /*cout << "\tplayer: " << player_x << ", " << player_y;*/
-        /*cout << endl;*/
-
-        if (player_x == mattox_x && player_y == mattox_y) {
-            ans = max(ans, time);
-            continue;
-        }
-
-        int player_changes[8][2] = {{1, 0}, {2, 0}, {-1, 0}, {-2, 0},
-                                    {0, 1}, {0, 2}, {0, -1}, {0, -2}};
-        int mattox_changes[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-
-        for (auto cp : player_changes) {
-            for (auto cm : mattox_changes) {
-                int new_player_x = player_x + cp[0];
-                int new_player_y = player_y + cp[1];
-                int new_mattox_x = mattox_x + cm[0];
-                int new_mattox_y = mattox_y + cm[1];
-                if (new_player_x >= n || new_player_y >= m || new_mattox_x >= n || new_mattox_y >= m)
-                    continue;
-                if (new_player_x < 0 || new_player_y < 0 || new_mattox_x < 0 || new_mattox_y < 0)
-                    continue;
-                if (dist[new_mattox_x][new_mattox_y][new_player_x][new_player_y] <= time + 1)
-                    continue;
-                pq.push(make_pair((time + 1) * -1,
-                    array<int, 4>{new_mattox_x, new_mattox_y, new_player_x, new_player_y}));
-            }
-        }
-
-    }
+    cout << search(0, 0, n-1, m-1, false, 0) << endl;
 
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < m; j++) {
-            cout << i << " " << j << ":\t";
-            cout << dist[i][j][i][j] << endl;
+            for (int x = 0; x < n; x++) {
+                for (int y = 0; y < m; y++) {
+                    cout << i << " " << j << " " << x << " " << y;
+                    cout << ": ";
+                    cout << dist[i][j][x][y][0] << " ";
+                    cout << dist[i][j][x][y][1] << endl;
+                }
+            }
         }
     }
 
-
-    if (ans == LLONG_MIN) {
-        cout << -1 << endl;
-    } else {
-        cout << ans << endl;
-    }
 }
