@@ -1,6 +1,8 @@
-5 5
-OOOOO
-OOOOO
-OOOOO
-OOOOO
-OOOOO
+6
+Champaign Orlando 2
+C PeoriaCharter Champaign Chicago
+F UnitedAirlines Chicago Dallas
+P DeltaAirlines Dallas Atlanta
+F UnitedAirlines Atlanta Orlando
+T Amtrak Atlanta Miami
+T Amtrak Miami Orlando
