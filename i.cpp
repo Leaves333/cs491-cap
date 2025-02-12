@@ -12,45 +12,90 @@ typedef vector<vi> vvi;
 typedef vector<ll> vll;
 typedef vector<vll> vvll;
 
-map<int, vi> edges;
-vi color;
+struct edge {
+    int dest, weight;
+};
 
-void dfs(int x, int c, const int k) {
-    c %= k;
-    color[x] = c + 1;
-    for (auto child : edges[x]) {
-        if (color[child] == -1) {
-            dfs(child, c + 1, k);
-        }
+map<int, vector<edge>> edges;
+set<int> visited;
+vvi cycles;
+vi cycle_weights;
+
+void dfs(int x, set<int> &seen, vi &stack, vi &psum) {
+
+    if (seen.count(x)) {
+        auto find_it = find(stack.begin(), stack.end(), x);
+        vi cycle(find_it, stack.end());
+        cycle.push_back(x);
+        cycles.push_back(cycle);
+        cycle_weights.push_back(psum[psum.size()-1] - psum[distance(stack.begin(), find_it)]);
     }
+
+    if (visited.count(x)) {
+        return; // ???
+    }
+
+    visited.insert(x);
+    seen.insert(x);
+    stack.push_back(x);
+
+    for (edge e : edges[x]) {
+        psum.push_back(psum[psum.size()-1] + e.weight);
+        dfs(e.dest, seen, stack, psum);
+        psum.pop_back();
+    }
+
+    seen.erase(seen.find(x));
+    stack.pop_back();
+
 }
 
 int main() {
     cin.tie(0)->sync_with_stdio(0);
 
-    int n, m, k;
-    cin >> n >> m >> k;
-    color = vi(n+1, -1);
+    int n, m;
+    cin >> n >> m;
 
-    for (int i = 0; i < m; i++) {
-        int a, b;
-        cin >> a >> b;
-        edges[a].push_back(b);
-        edges[b].push_back(a);
+    while (m--) {
+        string first, second, throwaway;
+        int b;
+        cin >> first >> throwaway >> second >> throwaway >> b;
+        int i = stoi(first.substr(1));
+        int j = stoi(second.substr(1));
+
+        edges[i].push_back(edge{j, b});
     }
+
+    vi stack;
+    vi psum;
+    psum.push_back(0);
 
     for (int i = 1; i <= n; i++) {
-        if (color[i] == -1) {
-            dfs(i, 0, k);
+        set<int> seen;
+        if (!visited.count(i)) {
+            dfs(i, seen, stack, psum);
         }
     }
 
-    if (k == 1 && m > 0) {
-        cout << -1 << endl;
-    } else {
-        for (int i = 1; i <= n; i++) {
-            cout << color[i] << endl;
+    /*for (auto cycle : cycles) {*/
+    /*    cout << "cycle found!! ";*/
+    /*    for (auto x : cycle) {*/
+    /*        cout << x << " -> ";*/
+    /*    }*/
+    /*    cout << endl;*/
+    /*}*/
+    /**/
+
+    /*cout << "cycle weight!!!" << endl;*/
+    /*for (auto x : cycle_weights) {*/
+    /*    cout << x << endl;*/
+    /*}*/
+
+    for (auto x : cycle_weights) {
+        if (x < 0) {
+            cout << "NO" << endl;
+            return 0;
         }
     }
-
+    cout << "YES" << endl;
 }
