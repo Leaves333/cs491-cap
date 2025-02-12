@@ -19,6 +19,7 @@ struct edge {
 int main() {
     cin.tie(0)->sync_with_stdio(0);
 
+    // get input
     int n, m, k, t;
     cin >> n >> m >> k >> t;
 
@@ -36,8 +37,9 @@ int main() {
         edges[y].push_back(edge{x, w});
     }
 
-    map<int, ll> dist;
-    dist[1] = 0;
+    // djikstra from start
+    vll dist_from_start(n+1, LLONG_MAX);
+    dist_from_start[1] = 0;
     priority_queue<pll, vector<pll>, greater<pll>> pq;
     pq.push(make_pair(0, 1));
 
@@ -48,26 +50,51 @@ int main() {
 
         for (edge e : edges[cur_loc]) {
             ll new_dist = cur_dist + e.weight;
-            if (!dist.count(e.dest) || new_dist < dist[e.dest]) {
-                dist[e.dest] = new_dist;
+            if (new_dist < dist_from_start[e.dest]) {
+                dist_from_start[e.dest] = new_dist;
                 pq.push(make_pair(new_dist, e.dest));
             }
         }
+    }
 
-        if (trains.count(cur_loc)) {
-            ll new_dist = cur_dist + t;
-            for (int dest : trains) {
-                if (!dist.count(dest) || new_dist < dist[dest]) {
-                    dist[dest] = new_dist;
-                    pq.push(make_pair(new_dist, dest));
-                }
+    // djikstra from kend
+    vll dist_from_end(n+1, LLONG_MAX);
+    dist_from_end[n] = 0;
+    pq.push(make_pair(0, n));
+
+    while (!pq.empty()) {
+        ll cur_loc = pq.top().second;
+        ll cur_dist = pq.top().first;
+        pq.pop();
+
+        for (edge e : edges[cur_loc]) {
+            ll new_dist = cur_dist + e.weight;
+            if (new_dist < dist_from_end[e.dest]) {
+                dist_from_end[e.dest] = new_dist;
+                pq.push(make_pair(new_dist, e.dest));
             }
         }
     }
 
-    if (!dist.count(n)) {
+    // calculate final answer
+    ll closest_from_start = LLONG_MAX;
+    ll closest_from_end = LLONG_MAX;
+    for (int t : trains) {
+        closest_from_start = min(closest_from_start, dist_from_start[t]);
+        closest_from_end = min(closest_from_end, dist_from_end[t]);
+    }
+
+    ll dist_with_train = LLONG_MAX;
+    ll dist_no_train = dist_from_start[n];
+
+    if (closest_from_start != LLONG_MAX && closest_from_end != LLONG_MAX) {
+        dist_with_train = closest_from_start + closest_from_end + t;
+    }
+
+    if (min(dist_with_train, dist_no_train) == LLONG_MAX) {
         cout << -1 << endl;
     } else {
-        cout << dist[n] << endl;
+        cout << min(dist_with_train, dist_no_train) << endl;
     }
+
 }
