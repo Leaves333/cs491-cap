@@ -1,8 +1,3 @@
-6
-Champaign Champaign 2
-C PeoriaCharter Champaign Chicago
-F UnitedAirlines Chicago Dallas
-P DeltaAirlines Dallas Atlanta
-F UnitedAirlines Atlanta Orlando
-T Amtrak Atlanta Miami
-T Amtrak Miami Orlando
+2 2
+x2 - x1 <= 2
+x1 - x2 <= 5
