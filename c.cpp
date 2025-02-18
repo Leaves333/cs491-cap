@@ -15,17 +15,22 @@ int main() {
 
     int n; cin >> n;
     int d[n][n];
+    queue<pii> edges_to_check;
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
             cin >> d[i][j];
+            if (d[i][j])
+                edges_to_check.push(make_pair(i, j));
         }
     }
 
-    for (int k = 0; k < n; k++) {
+    while (!edges_to_check.empty()) {
+        pii edge = edges_to_check.front();
+        edges_to_check.pop();
         for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                if (d[i][k] != 0 && d[k][j] != 0)
-                    d[i][j] = 1;
+            if (d[edge.second][i] && !d[edge.first][i]) {
+                d[edge.first][i] = 1;
+                edges_to_check.push(make_pair(edge.first, i));
             }
         }
     }
