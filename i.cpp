@@ -24,8 +24,9 @@ void dfs(int v, const vvi &edges, vi &output) {
 
 // input: edges: adj list of G
 // output: components: ssc of G
-// condensed_edges: adjacency list of G^SCC (by root vertices) ??? what does this mean
-void strongly_connected_components(const vvi &edges, vvi &components, vvi &condensed_edges) {
+// output: condensed_edges: adjacency list of G^SCC (by root vertices) ??? what does this mean
+// output: roots: root vertex of each v
+void strongly_connected_components(const vvi &edges, vvi &components, vvi &condensed_edges, vi &roots) {
 
     // init some variables
     int n = edges.size();
@@ -48,7 +49,7 @@ void strongly_connected_components(const vvi &edges, vvi &components, vvi &conde
 
     reverse(order.begin(), order.end());
     visited.assign(n, false);
-    vi roots(n, 0); // roots[v] stores root vertex of v's SCC
+    roots.assign(n, 0); // roots[v] stores root vertex of v's SCC
 
     // second dfs:
     // dfs through edges_transposed
@@ -65,12 +66,6 @@ void strongly_connected_components(const vvi &edges, vvi &components, vvi &conde
         }
     }
 
-    cout << "here's roots: ";
-    for (auto x : roots) {
-        cout << x << " ";
-    }
-    cout << endl;
-
     // add edges to condensed graph
     // for each edge in the original graph, if they aren't part of the same scc
     // add a new edge to the condensed graph
@@ -81,8 +76,13 @@ void strongly_connected_components(const vvi &edges, vvi &components, vvi &conde
                 condensed_edges[roots[v]].push_back(roots[u]);
 }
 
-void condensed_dfs(int x) {
-
+void condensed_dfs(int x, vvi &condensed_edges) {
+    if (visited[x])
+        return;
+    visited[x] = true;
+    for (int dest : condensed_edges[x]) {
+        condensed_dfs(dest, condensed_edges);
+    }
 }
 
 int main() {
@@ -103,10 +103,16 @@ int main() {
 
         vvi components;
         vvi condensed_edges;
-        strongly_connected_components(edges, components, condensed_edges);
+        vi roots;
+        strongly_connected_components(edges, components, condensed_edges, roots);
 
+        visited.assign(n, 0);
         int ans = 0;
         for (vi c : components) {
+            if (!visited[roots[c[0]]]) {
+                ans++;
+                condensed_dfs(roots[c[0]], condensed_edges);
+            }
         }
         cout << ans << endl;
 
