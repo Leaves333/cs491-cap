@@ -14,7 +14,10 @@ int main() {
     cin.tie(0)->sync_with_stdio(0);
 
     int t; cin >> t;
-    while (t--) {
-        
+    int ans = 0;
+    for (int i = 0; i < 32; i++) {
+        if (t & (1 << i))
+            ans++;
     }
+    cout << ans << endl;
 }
