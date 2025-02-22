@@ -1,8 +1,5 @@
-1
-5 6
-0 1
-1 0
 3 4
-4 3
-0 2
-4 2
+x1 = true -> x2 = false
+x1 = false -> x3 = true
+x2 = false -> x1 = false
+x3 = true -> x1 = true
