@@ -28,7 +28,6 @@ int main() {
 
     int l, r, s;
     cin >> l >> r >> s;
-    l--; r--;
 
     // time to build a sparse tree
     // preprocessing for sparse tree is in n log(n)
@@ -46,15 +45,19 @@ int main() {
     ll ans = 0;
     while (m--) {
 
+        l--; r--;
         int i = log2_floor(r - l + 1);
         int maximum = max(st[i][l], st[i][r - (1 << i) + 1]);
         ans += maximum;
+        l++; r++;
 
         // generate the next range
         l += s;
         l %= n;
+        l++;
         r += s;
         r %= n;
+        r++;
         if (l > r)
             swap(l, r);
     }
