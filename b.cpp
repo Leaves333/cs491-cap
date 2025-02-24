@@ -77,8 +77,8 @@ int main() {
 
     // store valid edges
     vector<pii> edges;
-    for (int i = 0; i <= n; i++) {
-        for (int j = i + 1; j <= n; j++) {
+    for (int i : buildings) {
+        for (int j : buildings) {
             if (d[i][j] <= t)
                 edges.push_back(make_pair(i, j));
         }
