@@ -1,3 +1,4 @@
+#include <climits>
 #pragma optimize("O3")
 
 #include <bits/stdc++.h>
@@ -44,7 +45,7 @@ struct DSU {
 int main() {
     cin.tie(0)->sync_with_stdio(0);
 
-    int n, m, k, t;
+    ll n, m, k, t;
     cin >> n >> m >> k >> t;
     vi buildings(k);
     for (int i = 0; i < k; i++) {
@@ -54,7 +55,7 @@ int main() {
     ll d[n+1][n+1];
     for (int i = 0; i <= n; i++) {
         for (int j = 0; j <= n; j++) {
-            d[i][j] = INT_MAX;
+            d[i][j] = LLONG_MAX;
         }
     }
     while (m--) {
@@ -68,7 +69,8 @@ int main() {
     for (int k = 0; k <= n; k++) {
         for (int i = 0; i <= n; i++) {
             for (int j = 0; j <= n; j++) {
-                d[i][j] = min(d[i][j], d[i][k] + d[k][j]);
+                if (d[i][k] < LLONG_MAX && d[k][j] < LLONG_MAX)
+                    d[i][j] = min(d[i][j], d[i][k] + d[k][j]);
             }
         }
     }
