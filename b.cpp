@@ -19,6 +19,7 @@ vector<vector<edge>> edges_true;
 vector<vector<edge>> edges_false;
 
 vector<vector<bool>> visited(2);
+vector<vector<bool>> can_color(2);
 int starting_loc;
 bool starting_color;
 
@@ -35,6 +36,7 @@ bool dfs(int location, bool color) {
         status &= dfs(e.dest, e.color);
     }
 
+    can_color[color][location] = status;
     return status;
 }
 
@@ -67,21 +69,30 @@ int main() {
 
     visited[false].assign(n + 1, false);
     visited[true].assign(n + 1, false);
-    bool good = true;
+    can_color[false].assign(n + 1, false);
+    can_color[true].assign(n + 1, false);
 
     for (int i = 1; i <= n; i++) {
         starting_loc = i;
-        bool ok = false;
         if (!visited[false][i]) {
             starting_color = false;
-            ok |= dfs(i, false);
+            dfs(i, false);
         }
         if (!visited[true][i]) {
             starting_color = true;
-            ok |= dfs(i, true);
+            dfs(i, true);
         }
-        if (!ok)
+    }
+
+    bool good = true;
+    for (int i = 1; i <= n; i++) {
+        if (!can_color[false][i] && !can_color[true][i]) {
             good = false;
+        }
+
+        /*cout << "i=" << i << ", ";*/
+        /*cout << "can color true: " << can_color[true][i] << ", ";*/
+        /*cout << "can color false: " << can_color[false][i] << endl;*/
     }
 
     if (good) {
