@@ -1,3 +1,5 @@
+#pragma optimize("O3")
+
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -13,6 +15,11 @@ typedef vector<vll> vvll;
 int main() {
     cin.tie(0)->sync_with_stdio(0);
 
-    int t; cin >> t;
-    cout << __builtin_popcount(t) << endl;
+    ll n, a, b;
+    cin >> n >> a >> b;
+    if (n < 3) {
+        cout << a + b << endl;
+    } else {
+        cout << (a | b) << endl;
+    }
 }
