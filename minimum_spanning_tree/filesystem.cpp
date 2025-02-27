@@ -24,9 +24,17 @@ int main() {
     vll dist(n + 1, LLONG_MAX);
     ll ans = 0;
     for (ll i = 1; i < n; i++) {
-        for (ll j = i + 1; j <= n; j++) {
-            dist[i] = min(dist[i], i * j / gcd(i, j));
+        int multi = 2;
+        while (true) {
+            ll prod = i * multi;
+            bool can_divide = prod % (multi - 1) == 0;
+            bool in_range = prod / (multi - 1) <= n;
+            if (can_divide && in_range)
+                break;
+            multi++;
         }
+        /*cout << i << " -> " << multi << endl;*/
+        dist[i] = i * multi;
         ans += dist[i];
     }
 
