@@ -68,7 +68,7 @@ struct SegmentTree {
     // tr: right boundary of current seg
     // l: target position
     // r: value to update
-    void update(int v, int tl, int tr, int pos, int new_val) {
+    void update(int v, int tl, int tr, int pos, ll new_val) {
         if (tl == tr) {
             tree[v] = new_val;
         } else {
@@ -98,7 +98,7 @@ int main() {
 
     while (q--) {
         string s;
-        int a, b;
+        ll a, b;
         cin >> s >> a >> b;
         
         if (s == "Add") {
