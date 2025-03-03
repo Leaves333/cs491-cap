@@ -98,9 +98,40 @@ int main() {
         edges[p + (b1 * n)].push_back(q + (b2 * n));
     }
 
+    cout << "here's the edges: " << endl;
+    for (int i = 0; i < edges.size(); i++) {
+        cout << i << " : ";
+        for (auto x : edges[i]) {
+            cout << x << " ";
+        }
+        cout << endl;
+    }
+
     vvi components, condensed_edges;
     vi roots;
     strongly_connected_components(edges, components, condensed_edges, roots);
+
+    for (int i = 1; i < n; i++) {
+        cout << i << " true is in " << roots[i + n] << endl;
+        cout << i << " false is in " << roots[i] << endl;
+    }
+
+    cout << "components are: " << endl;
+    for (auto c : components) {
+        for (auto x : c)
+            cout << x << " ";
+        cout << endl;
+    }
+
+    cout << "here's roots: " << endl;
+    for (int i = 0; i < roots.size(); i++) {
+        cout << i << " ";
+    }
+    cout << endl;
+    for (int i = 0; i < roots.size(); i++) {
+        cout << roots[i] << " ";
+    }
+    cout << endl;
 
     for (int i = 1; i < n; i++) {
         if (roots[i] == roots[i + n]) {
