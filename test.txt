@@ -1,5 +1,5 @@
 3 4
 x1 = true -> x2 = false
 x1 = false -> x3 = true
-x2 = false -> x1 = true
+x2 = false -> x1 = false
 x3 = true -> x1 = true
