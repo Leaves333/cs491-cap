@@ -49,7 +49,7 @@ int main() {
         for (int i = low; i < high; i++) {
             cout << "adding sqrt_nums[" << i << "]" << endl;
             ll cur = sqrt_nums[i];
-            ll exp = lowbit(l ^ (i));
+            ll exp = lowbit(l ^ i);
             if (exp % 2 == 1)
                 cur *= -1;
             ans += cur;
@@ -73,6 +73,17 @@ int main() {
             ans += cur;
         }
 
+        ll accurate_sum = 0;
+        for (int i = l; i <= r; i++) {
+            ll cur = nums[i];
+            ll exp = lowbit(l ^ (i / sqrt_n));
+            if (exp % 2 == 1)
+                cur *= -1;
+            accurate_sum += cur;
+        }
+
         cout << ans << endl;
+        cout << "should be " << accurate_sum << endl;
+        cout << endl;
     }
 }
