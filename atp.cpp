@@ -95,7 +95,7 @@ int main() {
 
         bool b1 = (v1 == "true");
         bool b2 = (v2 == "true");
-        edges[p + (b1 * n)].push_back(q + (b2 * n));
+        edges[2 * p + b1].push_back(2 * q + b2);
     }
 
     cout << "here's the edges: " << endl;
@@ -112,8 +112,8 @@ int main() {
     strongly_connected_components(edges, components, condensed_edges, roots);
 
     for (int i = 1; i < n; i++) {
-        cout << i << " true is in " << roots[i + n] << endl;
-        cout << i << " false is in " << roots[i] << endl;
+        cout << i << " true is in " << roots[2 * i] << endl;
+        cout << i << " false is in " << roots[2 * i + 1] << endl;
     }
 
     cout << "components are: " << endl;
@@ -134,7 +134,7 @@ int main() {
     cout << endl;
 
     for (int i = 1; i < n; i++) {
-        if (roots[i] == roots[i + n]) {
+        if (roots[2 * i] == roots[2 * i + 1]) {
             cout << "NO" << endl;
             return 0;
         }
