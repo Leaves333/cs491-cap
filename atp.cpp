@@ -1,3 +1,5 @@
+#pragma optimize("O3")
+
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -11,69 +13,48 @@ typedef vector<ll> vll;
 typedef vector<vll> vvll;
 
 vector<bool> visited;
+vector<bool> good;
 
-// dfs starting at vertex v
-// appends v to output vector after dfs leaves it
-void dfs(int v, const vvi &edges, vi &output) {
-    visited[v] = true;
-    for (int dest : edges[v])
-        if (!visited[dest])
-            dfs(dest, edges, output);
-    output.push_back(v);
-}
+// returns if there is a contradiction if cur is in the graph
+bool dfs(int cur, vvi &edges, set<int> &seen) {
 
-// input: edges: adj list of G
-// output: components: ssc of G
-// output: condensed_edges: adjacency list of G^SCC (by root vertices) ??? what does this mean
-// output: roots: root vertex of each v
-void strongly_connected_components(const vvi &edges, vvi &components, vvi &condensed_edges, vi &roots) {
+    // base case
+    if (visited[cur])
+        return good[cur];
+    visited[cur] = true;
+    good[cur] = true;
 
-    // init some variables
-    int n = edges.size();
-    components.clear();
-    condensed_edges.clear();
+    cout << "dfs with cur=" << cur << ", ";
+    cout << "seen=";
+    for (auto x : seen)
+        cout << x << ", ";
+    cout << endl;
 
-    // first dfs:
-    // fill order with a sorted list of vertices
-    vi order;
-    visited.assign(n, false);
-    for (int i = 0; i < n; i++)
-        if (!visited[i])
-            dfs(i, edges, order);
+    // find the opposite node
+    int counterpart = (cur / 2) * 2;
+    if (counterpart == cur)
+        counterpart++;
 
-    // create adjacency list of G transposed
-    vvi edges_tranposed(n);
-    for (int v = 0; v < n; v++)
-        for (int u : edges[v])
-            edges_tranposed[u].push_back(v);
-
-    reverse(order.begin(), order.end());
-    visited.assign(n, false);
-    roots.assign(n, 0); // roots[v] stores root vertex of v's SCC
-
-    // second dfs:
-    // dfs through edges_transposed
-    // find all the connected components
-    for (int v : order) {
-        if (!visited[v]) {
-            vi component;
-            dfs(v, edges_tranposed, component);
-            components.push_back(component);
-            int root = *min_element(component.begin(), component.end());
-            for (auto u : component) {
-                roots[u] = root;
-            }
-        }
+    // if its counterpart was previously in the stack, there is a contradiction
+    // and cur cannot be a valid node
+    if (seen.count(counterpart)) {
+        cout << cur << " is bad... " << endl;
+        good[cur] = false;
+        return false;
     }
 
-    // add edges to condensed graph
-    // for each edge in the original graph, if they aren't part of the same scc
-    // add a new edge to the condensed graph
-    condensed_edges.assign(n, {});
-    for (int v = 0; v < n; v++)
-        for (auto u : edges[v])
-            if (roots[v] != roots[u])
-                condensed_edges[roots[v]].push_back(roots[u]);
+    // dfs to adjacent nodes
+    bool result = true;
+    seen.insert(cur);
+    for (auto dest : edges[cur]) {
+        cout << "going from " << cur << " to " << dest << "... " << endl;
+        result &= dfs(dest, edges, seen);
+    }
+    seen.erase(cur);
+
+    cout << cur << " is " << result << endl;
+    good[cur] = result;
+    return result;
 }
 
 int main() {
@@ -98,43 +79,44 @@ int main() {
         edges[2 * p + b1].push_back(2 * q + b2);
     }
 
-    cout << "here's the edges: " << endl;
-    for (int i = 0; i < edges.size(); i++) {
-        cout << i << " : ";
-        for (auto x : edges[i]) {
-            cout << x << " ";
-        }
-        cout << endl;
-    }
+    // the plan:
+    // dfs through all the nodes
+    // if a node can be assigned neither true nor false
+    // then there is no answer
+    //
+    // good stores if there is a contradiction if we assume
+    // the node is colored the parity of good[i]
 
-    vvi components, condensed_edges;
-    vi roots;
-    strongly_connected_components(edges, components, condensed_edges, roots);
+    visited.assign(n * 2, false);
+    good.assign(n * 2, false);
 
-    for (int i = 1; i < n; i++) {
-        cout << i << " true is in " << roots[2 * i] << endl;
-        cout << i << " false is in " << roots[2 * i + 1] << endl;
-    }
+    /*for (int i = 2; i < 2 * n; i++) {*/
+    /*    if (!visited[i]) {*/
+    /*        set<int> seen;*/
+    /*        dfs(i, edges, seen);*/
+    /*    }*/
+    /*}*/
 
-    cout << "components are: " << endl;
-    for (auto c : components) {
-        for (auto x : c)
-            cout << x << " ";
-        cout << endl;
-    }
+    set<int> seen;
+    dfs(3, edges, seen);
+    dfs(4, edges, seen);
+    dfs(5, edges, seen);
+    dfs(6, edges, seen);
+    dfs(7, edges, seen);
+    dfs(2, edges, seen);
 
-    cout << "here's roots: " << endl;
-    for (int i = 0; i < roots.size(); i++) {
+    cout << "here's good: " << endl;
+    for (int i = 0; i < 2 * n; i++) {
         cout << i << " ";
     }
     cout << endl;
-    for (int i = 0; i < roots.size(); i++) {
-        cout << roots[i] << " ";
+    for (int i = 0; i < 2 * n; i++) {
+        cout << good[i] << " ";
     }
     cout << endl;
 
     for (int i = 1; i < n; i++) {
-        if (roots[2 * i] == roots[2 * i + 1]) {
+        if (!good[2 * i] && !good[2 * i + 1]) {
             cout << "NO" << endl;
             return 0;
         }

@@ -1,3 +1,8 @@
-9 3
-1 2 3 4 5 6 7 8 9
-4 4
+3 4
+x1 = true -> x2 = false
+x1 = false -> x3 = true
+x2 = false -> x1 = true
+x3 = true -> x1 = true
+
+this is good:
+let 1=true, 2=false, 3=false.
