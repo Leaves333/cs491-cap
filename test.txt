@@ -1,8 +1,11 @@
-3 4
-x1 = true -> x2 = false
-x1 = false -> x3 = true
-x2 = false -> x1 = true
-x3 = true -> x1 = true
+4
+4 9
+1 1
+1 15
+1 1000000000000000000
 
-this is good:
-let 1=true, 2=false, 3=false.
+sample out is
+11
+1
+32
+100688975

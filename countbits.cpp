@@ -1,4 +1,3 @@
-#include <algorithm>
 #pragma optimize("O3")
 
 #include <bits/stdc++.h>
@@ -17,47 +16,51 @@ const ll MOD = 1000000007;
 
 ll solve(ll l, ll r) {
 
-    cout << "solve called with " << l << " " << r << endl;
-
+    r++; // r is exclusive
     ll ans = 0;
-    for (int i = 0; i <= 61; i++) {
+    for (int i = 0; i <= 60; i++) {
 
         ll size = 1ll << (i + 1);
 
-        ll lower_bound = l / size;
-        ll upper_bound = (r / size) + 1;
+        ll lower_bound = (l / size) + (l % size != 0);
+        ll upper_bound = (r / size);
 
-        cout << "for size = " << size << " => " << i << "... " << endl;
+        if (lower_bound <= upper_bound) {
 
-        cout << "lower_bound = " << lower_bound << ", upper_bound=" << upper_bound << endl;
+            // add whole chunks
+            ans += ((upper_bound - lower_bound) % MOD) * ((size / 2) % MOD);
+            ans %= MOD;
 
-        // add complete segments
-        ans += ((upper_bound - lower_bound - 1) % MOD) * (size / 2);
-        ans %= MOD;
-        cout << upper_bound - lower_bound - 1 << " complete segments" << endl;
+            // add left side
+            ll extra_on_left = (lower_bound * size) - l;
+            ll bits_on_left = min(extra_on_left, size / 2);
+            ans += bits_on_left % MOD;
+            ans %= MOD;
 
-        // handle edge case
-        if (upper_bound - lower_bound - 1 == 0) {
-            int smol = max(l, (lower_bound * size) + size / 2);
-            int big = min(r, (lower_bound * size) + size / 2);
-            // TODO: wait this isn't working
-            continue;
+            // add right side
+            ll extra_on_right = r - (upper_bound * size);
+            ll bits_on_right = max(0ll, extra_on_right - (size / 2));
+            ans += bits_on_right % MOD;
+            ans %= MOD;
+
+        } else {
+
+            ll middle_bound = (upper_bound * size) + (size / 2);
+            ll bits_to_add = max(0ll, min(r - middle_bound, r - l));
+            ans += bits_to_add % MOD;
+            ans %= MOD;
+
         }
 
-        // add stuff on left
-        ll stuff_on_left = (lower_bound + 1) * size - l;
-        ans += min(stuff_on_left, size / 2);
+    }
+    return ans % MOD;
+}
+
+ll brute_force(ll l, ll r) {
+    ll ans = 0;
+    for (ll i = l; i <= r; i++) {
+        ans += __builtin_popcountll(i);
         ans %= MOD;
-        cout << min(stuff_on_left, size / 2) << " on left" << endl;
-
-        // add stuff on right
-        ll stuff_on_right = (r - (upper_bound * size));
-        ans += max(0ll, stuff_on_right - (size / 2));
-        ans %= MOD;
-        cout << max(0ll, stuff_on_right - (size / 2)) << " on right" << endl;
-
-        cout << endl;
-
     }
     return ans;
 }
