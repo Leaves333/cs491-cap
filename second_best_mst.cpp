@@ -25,13 +25,13 @@ vector<vector<pii>> mst_edges; // adj list, stores {dest, cost}
 
 int timer;
 vi tin, tout;
-vi h;
+vi depth;
 vvi up;
 vvi dp; // max edge from here to parent 2^i above 
 
 void dfs(int v, int p, int d) {
     tin[v] = ++timer;
-    h[v] = h[p] + 1;
+    depth[v] = depth[p] + 1;
     up[v][0] = p;
     dp[v][0] = d;
 
@@ -65,11 +65,11 @@ int lca(int u, int v) {
 // v needs to be a parent of u
 int max_along_path(int u, int v) {
     int ans = 0;
-    if (h[u] < h[v]) {
+    if (depth[u] < depth[v]) {
         swap(u, v);
     }
     for (int i = l - 1; i >= 0; i--) {
-        if (h[u] - h[v] >= (1 << i)) {
+        if (depth[u] - depth[v] >= (1 << i)) {
             ans = max(ans, dp[u][i]);
             u = up[u][i];
         }
@@ -85,18 +85,16 @@ void preprocess(int root) {
     up.assign(n, vector<int>(l + 1));
     dp.assign(n, vector<int>(l + 1));
 
-    h.resize(n);
-    h[root] = 0;
+    depth.resize(n);
+    depth[root] = 0;
 
     dfs(root, root, 0);
 
     for (int i = 1; i <= l - 1; i++) {
         for (int j = 1; j < n; j++) {
-            if (up[j][i - 1] != -1) {
-                int v = up[j][i - 1];
-                up[j][i] = up[v][i - 1];
-                dp[j][i] = max(dp[j][i - 1], dp[v][i - 1]);
-            }
+            int v = up[j][i - 1];
+            up[j][i] = up[v][i - 1];
+            dp[j][i] = max(dp[j][i - 1], dp[v][i - 1]);
         }
     }
 }

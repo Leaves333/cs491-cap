@@ -1,107 +1,124 @@
 #pragma GCC optimize("O3,unroll-loops")
-#include <bits/stdc++.h>
+#include <vector>
+#include <cmath>
+#include <iostream>
+#include <map>
 using namespace std;
 typedef long long ll;
-vector<int> parent;
-vector<int> level;
-ll const INF = 1e9;
+using vl = vector<ll>;
 
-vector<vector<ll>> floyd_warshall(vector<vector<ll>> &arr, int n) {
-    for (int k = 0; k < n; k++) {
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                if (arr[i][j] > (arr[i][k] + arr[k][j])) {
-                    arr[i][j] = arr[i][k] + arr[k][j];
-                }
-            }
-        }
+int n;
+int block_size;
+vl original_arr;
+vl block;
+map<int, int> block_sizes; // index, size of block
+vl intervals; // this will keep the left end of the intervals
+
+ll lowbit(ll x) {
+    return x & -x;
+}
+
+ll query(int l, int r) {
+    ll sum = 0;
+    int curr = -1;
+    int i = 0;
+
+    // first block that can be used
+    while (i + 1 < intervals.size() && intervals[i + 1] <= l) {
+        i++;
     }
-    return arr;
-}
 
-void make_set(int v) {
-    parent[v] = v;
-    level[v] = 0;
-}
-
-int find_set(int v) {
-    if (v == parent[v])
-        return v;
-    return parent[v] = find_set(parent[v]);
-}
-
-void union_sets(int a, int b) {
-    a = find_set(a);
-    b = find_set(b);
-    if (a != b) {
-        if (level[a] < level[b])
-            swap(a, b);
-        parent[b] = a;
-        if (level[a] == level[b])
-            level[a]++;
+    // first block (partial sum before a full block starts)
+    bool used = false;
+    while (l < intervals[i]) {
+        sum += original_arr[l] * curr;
+        l++;
+        used = true;
     }
+
+    if (used) {
+        curr *= -1;
+    }
+
+    // overlapping middle blocks
+    used = false;
+    while (l < intervals.size() && intervals[i] + block_sizes[intervals[i]] <= r) {
+        sum += block[intervals[i]] * curr;
+        l += block_sizes[intervals[i]];
+        i++;
+        curr *= -1;
+        used = true;
+    }
+
+    if (!used) {
+        curr = -1;
+    }
+    // last block
+    while (l <= r) {
+        sum += original_arr[l] * curr;
+        l++;
+    }
+    return sum;
+}
+
+ll brute_force_query(int l, int r) {
+    ll ret = 0;
+    for (int i = l; i <= r; i++) {
+        // we have to add 1 because we subtract 1 from the indices
+        // before calling this function
+        ll arg = (l + 1) ^ ((i + 1) / block_size);
+        ll exp = lowbit(arg);
+
+        if (exp % 2 == 0)
+            ret += original_arr[i];
+        else
+            ret += original_arr[i] * -1;
+    }
+    return ret;
 }
 
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    int n, m, k, t;
-    cin >> n >> m >> k >> t;
-    parent.resize(n);
-    level.resize(n);
-
-    vector<int> buildings(k); // buildings that we have to reach
-    for (int i = 0; i < k; i++) {
-        int temp;
+    int m;
+    cin >> n >> m;
+    block_size = sqrt(n);
+    original_arr.resize(n);
+    block.resize(n);
+    for (int i = 0; i < n; i++) {
+        ll temp;
         cin >> temp;
-        buildings[i] = temp;
+        original_arr[i] = temp;
     }
-    vector<vector<ll>> adjlist(n, vector<ll>(n, INF));
+
+
+    // making the blocks
+    int prev = 0;
+    int size = 0;
+    int block_index = -1;
+    intervals.push_back(0);  
+    for (int i = 0; i < n; i++) {  
+        block_index = floor((i + 1) / sqrt(n));  
+        block[block_index] += original_arr[i];  
+    
+        if (block_index != prev) {  
+            intervals.push_back(i);  
+            block_sizes[prev] = size;  
+            size = 0;
+            prev = block_index;
+        }
+        size++;
+    }
+    block_sizes[prev] = size;
+
+
     for (int i = 0; i < m; i++) {
-        int u, v;
-        ll w;
-        cin >> u >> v >> w;
-
-        adjlist[u - 1][v - 1] = w;
-        adjlist[v - 1][u - 1] = w;
-    }
-    for (int i = 0; i < n; i++) {
-        adjlist[i][i] = 0; // set diagonal to 0
+        int l, r;
+        cin >> l >> r;
+        cout << "query says " << query(l - 1, r - 1) << endl;
+        cout << "brute force says " << brute_force_query(l - 1, r - 1) << endl;
     }
 
-    floyd_warshall(adjlist, n);
-
-    vector<vector<ll>> edges;
-    for (int i = 0; i < k; i++) {
-        for (int j = i + 1; j < k; j++) {
-            int u = buildings[i] - 1;
-            int v = buildings[j] - 1;
-            ll w = adjlist[u][v];
-            if (w < INF) {
-                edges.push_back({w, u, v});
-            }
-        }
-    }
-
-    for (int i = 0; i < n; i++) {
-        make_set(i);
-    }
-
-    sort(edges.begin(), edges.end());
-
-    vector<pair<int, int>> result;
-    ll mst_cost = 0;
-    for (vector<ll> edge : edges) {
-        if (find_set(edge[1]) != find_set(edge[2])) {
-            mst_cost += edge[0];
-            result.push_back(make_pair(edge[1], edge[2]));
-            union_sets(edge[1], edge[2]);
-        }
-    }
-    if (mst_cost < t) {
-        cout << "YES";
-    } else {
-        cout << "NO";
-    }
+    
 }
