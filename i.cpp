@@ -14,75 +14,247 @@ typedef vector<vll> vvll;
 
 struct SegmentTree {
 
-    vll tree;
-
-    // public function to build segtree: a: input array
-    void build(const vll &a) {
-        tree.resize(4 * a.size());
-        build(a, 1, 0, a.size()-1);
-    }
-
-    // recursive function to build the segment tree:
-    // a: input array
-    // v: current index
-    // tl: left boundary of current seg
-    // tr: right boundary of current seg
-    void build(const vll &a, int v, int tl, int tr) {
-        if (tl == tr) {
-            tree[v] = a[tl];
-        } else {
-            int tm = (tl + tr) / 2;
-            build(a, v*2, tl, tm);
-            build(a, v*2+1, tm+1, tr);
-
-            // your operation goes here
-            tree[v] = tree[v*2] + tree[v*2+1];
-        }
-    }
-
-    // recursive function to answer a query from l to r
-    // call with v=1, tl=0, tr=n-1, l, r
-    // v: current index
-    // tl: left boundary of current seg
-    // tr: right boundary of current seg
-    // l: left bound of query
-    // r: right bound of query
-    ll query(int v, int tl, int tr, int l, int r) {
-        if (l > r) 
-            return 0;
-        if (l == tl && r == tr) {
-            return tree[v];
-        }
-        int tm = (tl + tr) / 2;
+    int n; // size of the seg tree
+    vll nums; // stores the base nums used to build the tree
     
-        return query(v*2, tl, tm, l, min(r, tm))
-               + query(v*2+1, tm+1, tr, max(l, tm+1), r);
+    vll max_tree;
+    vll sum_tree;
+    vll lazy; // annotations for lazy updating of values
+
+    // left child of p
+    int l(int p) { return p << 1; }
+
+    // right child of p
+    int r(int p) { return (p << 1) + 1; }
+
+    // operation we want the seg tree to do
+    ll add(ll a, ll b) {
+        if (a == -1) return b;
+        if (b == -1) return a;
+        return a + b; // NOTE: what operation do you want? change this
     }
 
-    // recursive function to update a value
-    // call with v=1, tl=0, tr=n-1, pos, new_val
-    // v: current index
-    // tl: left boundary of current seg
-    // tr: right boundary of current seg
-    // l: target position
-    // r: value to update
-    void update(int v, int tl, int tr, int pos, ll new_val) {
-        if (tl == tr) {
-            tree[v] = new_val;
-        } else {
-            int tm = (tl + tr) / 2;
-            if (pos <= tm)
-                update(v*2, tl, tm, pos, new_val);
-            else
-                update(v*2+1, tm+1, tr, pos, new_val);
+    // helper function to propagate lazy annotations down into children
+    void propagate(int p, int tl, int tr) {
 
-            // your operation goes here
-            tree[v] = tree[v*2] + tree[v*2+1];
+        if (tl > tr)
+            return;
+
+        // no lazy flag on this node, don't do anything
+        if (lazy[p] == -1)
+            return;
+
+        cout << "propagate at p=" << p << ", ";
+        cout << "tl=" << tl << ", ";
+        cout << "tr=" << tr << ", ";
+        cout << "lazy value of " << lazy[p] << endl;
+
+        max_tree[p] += lazy[p]; // NOTE: what should the lazy flag do? change this
+        sum_tree[p] += lazy[p] * (tr - tl + 1);
+        
+        // not a leaf, propagate the flag down
+        if (tl != tr) {
+            lazy[l(p)] = lazy[p];
+            lazy[r(p)] = lazy[p];
         }
+
+        // is a leaf, time to update
+        else {
+            nums[tl] += lazy[p]; // NOTE: what should the lazy flag do?
+        }
+
+        lazy[p] = -1; // erase the lazy flag
+    }
+
+    void build(int p, int tl, int tr) {
+
+        /*cout << "node " << p << " covers from ";*/
+        /*cout << tl << " to " << tr << endl;*/
+
+        // base case
+        if (tl == tr) {
+            max_tree[p] = nums[tl];
+            sum_tree[p] = nums[tl];
+        }
+
+        // build subtrees
+        else {
+            int tm = (tl + tr) / 2;
+            build(l(p), tl, tm);
+            build(r(p), tm + 1, tr);
+            max_tree[p] = max(max_tree[l(p)], max_tree[r(p)]);
+            sum_tree[p] = add(sum_tree[l(p)], sum_tree[r(p)]);
+        }
+
+    }
+
+    // public function to construct segtree:
+    // O(n) to build the tree
+    void init_tree(const vll &a) {
+
+        // set some private variables
+        nums = a;
+        n = nums.size();
+        max_tree.resize(n * 4);
+        sum_tree.resize(n * 4);
+        lazy.assign(n * 4, -1);
+
+        // build the segtree from the root node
+        build(1, 0, n-1);
+
+    }
+
+    ll query_max(int p, int tl, int tr, const int left, const int right) {
+
+        // impossible query
+        if (left > right)
+            return 0;
+
+        // found the segment
+        if (left == tl && right == tr)
+            return max_tree[p];
+
+        // recurse into left and right subtrees
+        propagate(p, tl, tr); // deal with lazy flag
+        int tm = (tl + tr) / 2;
+        return max(query_max(l(p), tl, tm, left, min(tm, right)),
+                    query_max(r(p), tm + 1, tr, max(left, tm + 1), right));
+
+    }
+    
+    // public function to query from left to right:
+    // O(log n) to perform a query
+    ll query_max(const int left, const int right) {
+        return query_max(1, 0, n - 1, left, right);
+    }
+
+    ll query_sum(int p, int tl, int tr, const int left, const int right) {
+
+        // impossible query
+        if (left > right)
+            return 0;
+
+        // found the segment
+        if (left == tl && right == tr)
+            return sum_tree[p];
+
+        // recurse into left and right subtrees
+        propagate(p, tl, tr); // deal with lazy flag
+        int tm = (tl + tr) / 2;
+        return add(query_sum(l(p), tl, tm, left, min(tm, right)),
+                    query_sum(r(p), tm + 1, tr, max(left, tm + 1), right));
+
+    }
+    
+    // public function to query from left to right:
+    // O(log n) to perform a query
+    ll query_sum(const int left, const int right) {
+        return query_sum(1, 0, n - 1, left, right);
+    }
+
+    void update(int p, int tl, int tr, const int left, const int right, const ll val) {
+
+        // impossible range
+        if (left > right)
+            return;
+
+        // found the segment
+        if (tl == left && tr == right) {
+            lazy[p] += val; // update this node
+            propagate(p, tl, tr);
+        }
+
+        // recurse into left and right subtrees
+        else {
+            int tm = (tl + tr) / 2;
+            update(l(p), tl, tm, left, min(tm, right), val);
+            update(r(p), tm+1, tr, max(left, tm+1), right, val);
+
+            // resolve lazy flags if there are any, then update
+            propagate(l(p), tl, tm);
+            propagate(r(p), tm + 1, tr);
+
+            max_tree[p] = max(max_tree[l(p)], max_tree[r(p)]);
+            sum_tree[p] = add(sum_tree[l(p)], sum_tree[r(p)]);
+        }
+
+    }
+
+    // public function to update nodes from left to right by val
+    void update(const int left, const int right, const ll val) {
+        update(1, 0, n - 1, left, right, val);
+    }
+
+    void print() {
+
+        cout << "printing the segtree: " << endl;
+
+        cout << "here's max tree: " << endl;
+        for (int i = 0; i < max_tree.size(); i++) {
+            cout << i << "\t";
+        }
+        cout << endl;
+        for (int i = 0; i < max_tree.size(); i++) {
+            cout << max_tree[i] << "\t";
+        }
+        cout << endl;
+
+        cout << "here's sum tree: " << endl;
+        for (int i = 0; i < sum_tree.size(); i++) {
+            cout << i << "\t";
+        }
+        cout << endl;
+        for (int i = 0; i < sum_tree.size(); i++) {
+            cout << sum_tree[i] << "\t";
+        }
+        cout << endl;
+
+        cout << "here's the lazy: " << endl;
+        for (int i = 0; i < lazy.size(); i++) {
+            cout << i << "\t";
+        }
+        cout << endl;
+        for (int i = 0; i < lazy.size(); i++) {
+            cout << lazy[i] << "\t";
+        }
+        cout << endl;
+
+        cout << endl;
+
     }
 
 };
 
 int main() {
+    cin.tie(0)->sync_with_stdio(0);
 
+    int n, q;
+    cin >> n >> q;
+
+    SegmentTree segtree;
+    vll nums(n, 0);
+    segtree.init_tree(nums);
+
+    segtree.print();
+
+    while (q--) {
+
+        string op;
+        int l, r;
+        cin >> op >> l >> r;
+        l--; r--; // tree is 0 indexed, but input is 1 indexed
+
+        if (op == "Add") {
+            int v; cin >> v;
+            segtree.update(l, r, v);
+            segtree.print();
+        } else if (op == "Max") {
+            cout << segtree.query_max(l, r) << endl;
+            segtree.print();
+        } else if (op == "Sum") {
+            cout << segtree.query_sum(l, r) << endl;
+            segtree.print();
+        }
+
+    }
 }
