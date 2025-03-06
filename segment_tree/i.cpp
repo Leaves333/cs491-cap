@@ -18,8 +18,7 @@ struct SegmentTree {
 
     // public function to build segtree:
     // a: input array
-    void build(const vll &a) {
-        tree.resize(4 * a.size());
+    void build(const vll &a) { tree.resize(4 * a.size());
         build(a, 1, 0, a.size()-1);
     }
 

@@ -30,11 +30,14 @@ struct SegmentTree {
     ll func(ll a, ll b) {
         if (a == -1) return b;
         if (b == -1) return a;
-        return min(a, b); // NOTE: what operation do you want? change this
+        return max(a, b); // NOTE: what operation do you want? change this
     }
 
     // helper function to propagate lazy annotations down into children
     void propagate(int p, int tl, int tr) {
+
+        if (tl > tr)
+            return;
 
         // no lazy flag on this node, don't do anything
         if (lazy[p] == -1)
@@ -57,6 +60,9 @@ struct SegmentTree {
     }
 
     void build(int p, int tl, int tr) {
+
+        /*cout << "node " << p << " covers from ";*/
+        /*cout << tl << " to " << tr << endl;*/
 
         // base case
         if (tl == tr) {
@@ -81,6 +87,7 @@ struct SegmentTree {
         nums = a;
         n = nums.size();
         tree.resize(n * 4);
+        lazy.assign(n * 4, -1);
 
         // build the segtree from the root node
         build(1, 0, n-1);
@@ -88,8 +95,6 @@ struct SegmentTree {
     }
 
     ll query(int p, int tl, int tr, const int left, const int right) {
-
-        propagate(p, tl, tr); // deal with lazy flag
 
         // impossible query
         if (left > right)
@@ -100,6 +105,7 @@ struct SegmentTree {
             return tree[p];
 
         // recurse into left and right subtrees
+        propagate(p, tl, tr); // deal with lazy flag
         int tm = (tl + tr) / 2;
         return func(query(l(p), tl, tm, left, min(tm, right)),
                     query(r(p), tm + 1, tr, max(left, tm + 1), right));
@@ -112,12 +118,9 @@ struct SegmentTree {
         return query(1, 0, n - 1, left, right);
     }
 
-    // update values from left to right by val
     void update(int p, int tl, int tr, const int left, const int right, const ll val) {
 
-        propagate(p, tl, tr);
-
-        // impossible query
+        // impossible range
         if (left > right)
             return;
 
@@ -131,13 +134,44 @@ struct SegmentTree {
         else {
             int tm = (tl + tr) / 2;
             update(l(p), tl, tm, left, min(tm, right), val);
-            update(r(p), tm + 1, tr, max(left, tm+1), right, val);
+            update(r(p), tm+1, tr, max(left, tm+1), right, val);
 
             // resolve lazy flags if there are any, then update
             propagate(l(p), tl, tm);
             propagate(r(p), tm + 1, tr);
             tree[p] = func(tree[l(p)], tree[r(p)]);
         }
+
+    }
+
+    // public function to update nodes from left to right by val
+    void update(const int left, const int right, const ll val) {
+        update(1, 0, n - 1, left, right, val);
+    }
+
+    void print() {
+
+        cout << "printing the segtree: " << endl;
+
+        cout << "here's the tree: " << endl;
+        for (int i = 0; i < tree.size(); i++) {
+            cout << i << "\t";
+        }
+        cout << endl;
+        for (int i = 0; i < tree.size(); i++) {
+            cout << tree[i] << "\t";
+        }
+        cout << endl;
+
+        cout << "here's the lazy: " << endl;
+        for (int i = 0; i < lazy.size(); i++) {
+            cout << i << "\t";
+        }
+        cout << endl;
+        for (int i = 0; i < lazy.size(); i++) {
+            cout << lazy[i] << "\t";
+        }
+        cout << endl;
 
     }
 
