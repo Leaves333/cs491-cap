@@ -61,11 +61,11 @@ struct SegmentTree {
             }
         }
 
-        /*cout << "building tree: " << endl;*/
-        /*cout << v << " goes from " << tl << " to " << tr << ", ";*/
-        /*cout << "left=" << left[v] << ", ";*/
-        /*cout << "tree=" << tree[v] << ", ";*/
-        /*cout << "right=" << right[v] << endl;*/
+        cout << "building tree: " << endl;
+        cout << v << " goes from " << tl << " to " << tr << ", ";
+        cout << "left=" << left[v] << ", ";
+        cout << "tree=" << tree[v] << ", ";
+        cout << "right=" << right[v] << endl;
 
     }
 
@@ -136,7 +136,7 @@ int main() {
         l--; r--;
 
         ll query = segtree.query(1, 0, n-1, l, r)[1];
-        cout << query << endl;
+        cout << max(0ll, query) << endl;
         ans += max(0ll, query);
     }
     cout << ans << endl;
