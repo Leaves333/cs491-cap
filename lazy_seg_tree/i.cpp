@@ -25,12 +25,7 @@ struct SegmentTree {
     int l(int p) { return p << 1; }
 
     // right child of p
-    int r(int p) { return (p << 1) + 1; }
-
-    // operation we want the seg tree to do
-    ll add(ll a, ll b) {
-        return a + b; // NOTE: what operation do you want? change this
-    }
+    int r(int p) { return (p << 1) | 1; }
 
     // helper function to propagate lazy annotations down into children
     void propagate(int p, int tl, int tr) {
@@ -45,11 +40,6 @@ struct SegmentTree {
         if (tl != tr) {
             lazy[l(p)] += lazy[p];
             lazy[r(p)] += lazy[p];
-        }
-
-        // is a leaf, time to update
-        else {
-            nums[tl] += lazy[p]; // NOTE: what should the lazy flag do?
         }
 
         lazy[p] = 0; // erase the lazy flag
@@ -72,7 +62,7 @@ struct SegmentTree {
             build(l(p), tl, tm);
             build(r(p), tm + 1, tr);
             max_tree[p] = max(max_tree[l(p)], max_tree[r(p)]);
-            sum_tree[p] = add(sum_tree[l(p)], sum_tree[r(p)]);
+            sum_tree[p] = sum_tree[l(p)] + sum_tree[r(p)];
         }
 
     }
@@ -102,7 +92,7 @@ struct SegmentTree {
             return 0;
 
         // found the segment
-        if (left == tl && right == tr)
+        if (tl >= left && tr <= right)
             return max_tree[p];
 
         // recurse into left and right subtrees
@@ -127,13 +117,13 @@ struct SegmentTree {
             return 0;
 
         // found the segment
-        if (left == tl && right == tr)
+        if (tl >= left && tr <= right)
             return sum_tree[p];
 
         // recurse into left and right subtrees
         int tm = (tl + tr) / 2;
-        return add(query_sum(l(p), tl, tm, left, min(tm, right)),
-                    query_sum(r(p), tm + 1, tr, max(left, tm + 1), right));
+        return query_sum(l(p), tl, tm, left, min(tm, right)) +
+                    query_sum(r(p), tm + 1, tr, max(left, tm + 1), right);
 
     }
     
@@ -150,12 +140,9 @@ struct SegmentTree {
             return;
 
         // found the segment
-        if (tl == left && tr == right) {
+        if (tl >= left && tr <= right) {
             // update this node
-            if (lazy[0] == -1)
-                lazy[p] = val;
-            else
-                lazy[p] += val; 
+            lazy[p] += val; 
             propagate(p, tl, tr);
         }
 
@@ -170,7 +157,7 @@ struct SegmentTree {
             propagate(r(p), tm + 1, tr);
 
             max_tree[p] = max(max_tree[l(p)], max_tree[r(p)]);
-            sum_tree[p] = add(sum_tree[l(p)], sum_tree[r(p)]);
+            sum_tree[p] = sum_tree[l(p)] + sum_tree[r(p)];
         }
 
     }
@@ -178,44 +165,6 @@ struct SegmentTree {
     // public function to update nodes from left to right by val
     void update(const int left, const int right, const ll val) {
         update(1, 0, n - 1, left, right, val);
-    }
-
-    void print() {
-
-        cout << "printing the segtree: " << endl;
-
-        cout << "here's max tree: " << endl;
-        for (int i = 0; i < max_tree.size(); i++) {
-            cout << i << "\t";
-        }
-        cout << endl;
-        for (int i = 0; i < max_tree.size(); i++) {
-            cout << max_tree[i] << "\t";
-        }
-        cout << endl;
-
-        cout << "here's sum tree: " << endl;
-        for (int i = 0; i < sum_tree.size(); i++) {
-            cout << i << "\t";
-        }
-        cout << endl;
-        for (int i = 0; i < sum_tree.size(); i++) {
-            cout << sum_tree[i] << "\t";
-        }
-        cout << endl;
-
-        cout << "here's the lazy: " << endl;
-        for (int i = 0; i < lazy.size(); i++) {
-            cout << i << "\t";
-        }
-        cout << endl;
-        for (int i = 0; i < lazy.size(); i++) {
-            cout << lazy[i] << "\t";
-        }
-        cout << endl;
-
-        cout << endl;
-
     }
 
 };
@@ -241,9 +190,9 @@ int main() {
             int v; cin >> v;
             segtree.update(l, r, v);
         } else if (op == "Max") {
-            cout << segtree.query_max(l, r) << endl;
+            cout << segtree.query_max(l, r) << "\n";
         } else if (op == "Sum") {
-            cout << segtree.query_sum(l, r) << endl;
+            cout << segtree.query_sum(l, r) << "\n";
         }
 
     }
