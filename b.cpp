@@ -61,11 +61,11 @@ struct SegmentTree {
             }
         }
 
-        cout << "building tree: " << endl;
-        cout << v << " goes from " << tl << " to " << tr << ", ";
-        cout << "left=" << left[v] << ", ";
-        cout << "tree=" << tree[v] << ", ";
-        cout << "right=" << right[v] << endl;
+        /*cout << "building tree: " << endl;*/
+        /*cout << v << " goes from " << tl << " to " << tr << ", ";*/
+        /*cout << "left=" << left[v] << ", ";*/
+        /*cout << "tree=" << tree[v] << ", ";*/
+        /*cout << "right=" << right[v] << endl;*/
 
     }
 
