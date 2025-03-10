@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <utility>
 #pragma optimize("O3")
 
 #include <bits/stdc++.h>
@@ -14,107 +16,204 @@ typedef vector<vll> vvll;
 
 struct SegmentTree {
 
-    vll tree;
-    vll left;
-    vll right;
-
-    // public function to build segtree: a: input array
-    void build(const vll &a) {
-        tree.resize(4 * a.size());
-        left.resize(4 * a.size());
-        right.resize(4 * a.size());
-        build(a, 1, 0, a.size()-1);
-    }
-
-    int l(int v) { return v * 2; }
-    int r(int v) { return (v * 2) + 1; }
-
-    // recursive function to build the segment tree:
-    // a: input array
-    // v: current index
-    // tl: left boundary of current seg
-    // tr: right boundary of current seg
-    void build(const vll &a, int v, int tl, int tr) {
-        if (tl == tr) {
-            tree[v] = a[tl];
-        } else {
-            int tm = (tl + tr) / 2;
-            build(a, v*2, tl, tm);
-            build(a, v*2+1, tm+1, tr);
-
-            // your operation goes here
-            // combine both largest segments of children
-            tree[v] = tree[l(v)] + tree[r(v)] + right[l(v)] + left[r(v)];
-            left[v] = left[l(v)];
-            right[v] = right[r(v)];
-
-            // if left segment is better
-            if (tree[l(v)] > tree[v]) {
-                tree[v] = tree[l(v)];
-                right[v] = right[r(v)] + tree[r(v)] + left[r(v)] + right[l(v)];
-            }
-
-            // if right segment is better
-            if (tree[r(v)] > tree[v]) {
-                tree[v] = tree[r(v)];
-                left[v] = left[l(v)] + tree[l(v)] + right[l(v)] + left[r(v)];
-            }
-        }
-
-        /*cout << "building tree: " << endl;*/
-        /*cout << v << " goes from " << tl << " to " << tr << ", ";*/
-        /*cout << "left=" << left[v] << ", ";*/
-        /*cout << "tree=" << tree[v] << ", ";*/
-        /*cout << "right=" << right[v] << endl;*/
-
-    }
-
-    // recursive function to answer a query from l to r
-    // call with v=1, tl=0, tr=n-1, l, r
-    // v: current index
-    // tl: left boundary of current seg
-    // tr: right boundary of current seg
-    // l: left bound of query
-    // r: right bound of query
-    array<ll, 3> query(int v, int tl, int tr, int l, int r) {
-        if (l > r) 
-            return array<ll, 3>();
-        if (l == tl && r == tr) {
-            return {left[v], tree[v], right[v]};
-        }
-        int tm = (tl + tr) / 2;
+    int n; // size of the seg tree
+    vll nums; // stores the base nums used to build the tree
     
-        auto left_query = query(v*2, tl, tm, l, min(r, tm));
-        auto right_query = query(v*2+1, tm+1, tr, max(l, tm+1), r);
+    vll min_tree;
+    vll max_tree;
+    vll lazy; // annotations for lazy updating of values
+    
+    vector<bool> valid; // stores whether each node is a root of a valid bst
+    int bad_nodes; // stores how many elments are false in valid
 
-        array<ll, 3> answer;
-        // your operation goes here
-        // combine both largest segments of children
-        answer[1] = left_query[1] + right_query[1] + left_query[2] + right_query[0];
-        answer[0] = left_query[0];
-        answer[2] = right_query[2];
+    // left child of p
+    int l(int p) { return p << 1; }
 
-        // if left segment is better
-        if (left_query[1] > answer[1]) {
-            answer[1] = left_query[1];
-            answer[2] = right_query[2] + right_query[1] + right_query[0] + left_query[2];
+    // right child of p
+    int r(int p) { return (p << 1) | 1; }
+
+    // helper function to propagate lazy annotations down into children
+    void propagate(int p, int tl, int tr) {
+
+        if (tl > tr)
+            return;
+
+        min_tree[p] += lazy[p]; // NOTE: what should the lazy flag do? change this
+        max_tree[p] += lazy[p]; // NOTE: what should the lazy flag do? change this
+        
+        // not a leaf, propagate the flag down
+        if (tl != tr) {
+            lazy[l(p)] += lazy[p];
+            lazy[r(p)] += lazy[p];
         }
 
-        // if right segment is better
-        if (right_query[1] > answer[1]) {
-            answer[1] = right_query[1];
-            answer[0] = left_query[0] + left_query[1] + left_query[2] + right_query[0];
+        lazy[p] = 0; // erase the lazy flag
+    }
+
+    void build(int p, int tl, int tr) {
+
+        // base case
+        if (tl == tr) {
+            min_tree[p] = nums[tl];
+            max_tree[p] = nums[tl];
         }
 
-        /*cout << "query at " << tl << " to " << tr << " returned ";*/
-        /*cout << answer[0] << ", ";*/
-        /*cout << answer[1] << ", ";*/
-        /*cout << answer[2] << endl;*/
+        // build subtrees
+        else {
+            int tm = (tl + tr) / 2;
+            build(l(p), tl, tm);
+            build(r(p), tm + 1, tr);
+            min_tree[p] = min(min_tree[l(p)], min_tree[r(p)]);
+            max_tree[p] = max(max_tree[l(p)], max_tree[r(p)]);
+        }
 
-        return answer;
+    }
+
+    // public function to construct segtree:
+    // O(n) to build the tree
+    void init_tree(const vll &a) {
+
+        // set some private variables
+        nums = a;
+        n = nums.size();
+        min_tree.resize(n * 4);
+        max_tree.resize(n * 4);
+        lazy.assign(n * 4, 0);
+        valid.assign(n * 4, true);
+        bad_nodes = 0;
+
+        // build the segtree from the root node
+        build(1, 0, n-1);
+
+    }
+
+    ll query_max(int p, int tl, int tr, const int left, const int right) {
+
+        propagate(p, tl, tr); // deal with lazy flag
+        
+        // impossible query
+        if (left > right)
+            return INT_MIN;
+
+        // found the segment
+        if (tl >= left && tr <= right)
+            return max_tree[p];
+
+        // recurse into left and right subtrees
+        int tm = (tl + tr) / 2;
+        return max(query_max(l(p), tl, tm, left, min(tm, right)),
+                    query_max(r(p), tm + 1, tr, max(left, tm + 1), right));
+
+    }
+    
+    // public function to query from left to right:
+    // O(log n) to perform a query
+    ll query_max(const int left, const int right) {
+        return query_max(1, 0, n - 1, left, right);
+    }
+
+    ll query_min(int p, int tl, int tr, const int left, const int right) {
+
+        propagate(p, tl, tr); // deal with lazy flag
+        
+        // impossible query
+        if (left > right)
+            return INT_MAX;
+
+        // found the segment
+        if (tl >= left && tr <= right)
+            return min_tree[p];
+
+        // recurse into left and right subtrees
+        int tm = (tl + tr) / 2;
+        return min(query_min(l(p), tl, tm, left, min(tm, right)),
+                    query_min(r(p), tm + 1, tr, max(left, tm + 1), right));
+
+    }
+    
+    // public function to query from left to right:
+    // O(log n) to perform a query
+    ll query_min(const int left, const int right) {
+        return query_min(1, 0, n - 1, left, right);
+    }
+
+    void update(int p, int tl, int tr, const int left, const int right, const ll val) {
+
+        // impossible range
+        if (left > right)
+            return;
+
+        // found the segment
+        if (tl >= left && tr <= right) {
+            // update this node
+            lazy[p] += val; 
+            propagate(p, tl, tr);
+        }
+
+        // recurse into left and right subtrees
+        else {
+            int tm = (tl + tr) / 2;
+            update(l(p), tl, tm, left, min(tm, right), val);
+            update(r(p), tm+1, tr, max(left, tm+1), right, val);
+
+            // resolve lazy flags if there are any, then update
+            propagate(l(p), tl, tm);
+            propagate(r(p), tm + 1, tr);
+
+            max_tree[p] = max(max_tree[l(p)], max_tree[r(p)]);
+        }
+
+    }
+
+    // public function to update nodes from left to right by val
+    void update(const int left, const int right, const ll val) {
+        update(1, 0, n - 1, left, right, val);
+    }
+
+    void print() {
+        cout << "here's tree!" << endl;
+        for (int i = 0; i < max_tree.size(); i++) {
+            cout << i << "\t";
+        }
+        cout << endl;
+        for (int i = 0; i < max_tree.size(); i++) {
+            cout << max_tree[i] << "\t";
+        }
+        cout << endl;
+        cout << endl;
     }
 
 };
+
+// do an inorder traversal of the tree
+pii dfs(int x, int p, const vll &nums, const vvi &edges, vll &ordering, vector<pii> &ranges) {
+
+    int left = INT_MAX;
+    int right = INT_MIN;
+
+    for (auto dest : edges[x]) {
+        if (dest != p && nums[dest] < nums[x]) {
+            auto bounds = dfs(dest, x, nums, edges, ordering, ranges);
+            left = min(left, bounds.first);
+            right = max(right, bounds.second);
+        }
+    }
+
+    left = min(left, (int) ordering.size());
+    right = max(right, (int) ordering.size());
+    ordering.push_back(nums[x]);
+
+    for (auto dest : edges[x]) {
+        if (dest != p && nums[dest] > nums[x]) {
+            auto bounds = dfs(dest, x, nums, edges, ordering, ranges);
+            left = min(left, bounds.first);
+            right = max(right, bounds.second);
+        }
+    }
+    
+    ranges[x] = {left, right};
+    return {left, right};
+}
 
 int main() {
     cin.tie(0)->sync_with_stdio(0);
@@ -126,18 +225,26 @@ int main() {
         cin >> nums[i];
     }
 
-    SegmentTree segtree;
-    segtree.build(nums);
-
-    ll ans = 0;
-    while (m--) {
-        int l, r;
-        cin >> l >> r;
-        l--; r--;
-
-        ll query = segtree.query(1, 0, n-1, l, r)[1];
-        cout << max(0ll, query) << endl;
-        ans += max(0ll, query);
+    vvi edges(n);
+    for (int i = 1; i < n; i++) {
+        int x; cin >> x;
+        x--;
+        edges[i].push_back(x);
+        edges[x].push_back(i);
     }
-    cout << ans << endl;
+
+    vector<pii> ranges(n);
+    vll ordering;
+    dfs(0, -1, nums, edges, ordering, ranges);
+
+    SegmentTree segtree;
+    segtree.init_tree(ordering);
+
+    while (m--) {
+        char op;
+        int v, k;
+        cin >> op >> v >> k;
+
+        
+    }
 }
