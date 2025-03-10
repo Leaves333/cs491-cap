@@ -27,13 +27,27 @@ int timer;
 vi tin, tout;
 vi depth;
 vvi up;
-vvi dp; // max edge from here to parent 2^i above 
+vector<vector<pii>> dp; // max edge from here to parent 2^i above 
+
+pii combine(pii a, pii b) {
+    vi v = {a.first, a.second, b.first, b.second};
+    int top_two = -3, top_one = -2;
+    for (int c : v) {
+        if (c > top_one) {
+            top_two = top_one;
+            top_one = c;
+        } else if (c > top_two && c < top_one) {
+            top_two = c;
+        }
+    }
+    return {top_one, top_two};
+}
 
 void dfs(int v, int p, int d) {
     tin[v] = ++timer;
     depth[v] = depth[p] + 1;
     up[v][0] = p;
-    dp[v][0] = d;
+    dp[v][0] = {d, -1};
 
     for (pii edge : mst_edges[v]) {
         int u = edge.first;
@@ -46,34 +60,44 @@ void dfs(int v, int p, int d) {
     tout[v] = ++timer;
 }
 
-bool is_ancestor(int u, int v) {
-    return tin[u] <= tin[v] && tout[u] >= tout[v];
-}
+/*bool is_ancestor(int u, int v) {*/
+/*    return tin[u] <= tin[v] && tout[u] >= tout[v];*/
+/*}*/
+/**/
+/*int lca(int u, int v) {*/
+/*    if (is_ancestor(u, v))*/
+/*        return u;*/
+/*    if (is_ancestor(v, u))*/
+/*        return v;*/
+/*    for (int i = l; i >= 0; --i) {*/
+/*        if (!is_ancestor(up[u][i], v))*/
+/*            u = up[u][i];*/
+/*    }*/
+/*    return up[u][0];*/
+/*}*/
 
-int lca(int u, int v) {
-    if (is_ancestor(u, v))
-        return u;
-    if (is_ancestor(v, u))
-        return v;
-    for (int i = l; i >= 0; --i) {
-        if (!is_ancestor(up[u][i], v))
-            u = up[u][i];
-    }
-    return up[u][0];
-}
-
-// v needs to be a parent of u
-int max_along_path(int u, int v) {
-    int ans = 0;
+pii lca(int u, int v) {
+    pii ans = {-2, -3};
     if (depth[u] < depth[v]) {
         swap(u, v);
     }
     for (int i = l - 1; i >= 0; i--) {
         if (depth[u] - depth[v] >= (1 << i)) {
-            ans = max(ans, dp[u][i]);
+            ans = combine(ans, dp[u][i]);
             u = up[u][i];
         }
     }
+    if (u == v) {
+        return ans;
+    }
+    for (int i = l - 1; i >= 0; i--) {
+        if (up[u][i] != -1 && up[v][i] != -1 && up[u][i] != up[v][i]) {
+            ans = combine(ans, combine(dp[u][i], dp[v][i]));
+            u = up[u][i];
+            v = up[v][i];
+        }
+    }
+    ans = combine(ans, combine(dp[u][0], dp[v][0]));
     return ans;
 }
 
@@ -83,7 +107,7 @@ void preprocess(int root) {
     timer = 0;
     l = ceil(log2(n));
     up.assign(n, vector<int>(l + 1));
-    dp.assign(n, vector<int>(l + 1));
+    dp.assign(n, vector<pii>(l + 1));
 
     depth.resize(n);
     depth[root] = 0;
@@ -134,7 +158,7 @@ int main() {
     // read input
     int m;
     cin >> n >> m;
-    n++; // account for 1 indexing
+    n++;
 
     vector<edge> edges;
     for (int i = 0; i < m; i++) {
@@ -169,10 +193,12 @@ int main() {
     // get answer
     ll ans = LLONG_MAX;
     for (edge e : remaining_edges) {
-        int parent = lca(e.u, e.v);
-        int first = max_along_path(e.u, parent);
-        int second = max_along_path(e.v, parent);
-        ans = min(ans, mst_weight - max(first, second) + e.cost);
+        pii parent = lca(e.u, e.v);
+        if (parent.first != -1) {
+            ans = min(ans, mst_weight + e.cost - parent.first);
+        } else if (parent.second != -1) {
+            ans = min(ans, mst_weight + e.cost - parent.second);
+        }
     }
 
     cout << ans << endl;
