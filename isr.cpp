@@ -56,16 +56,17 @@ struct SegmentTree {
 
             // combine both largest segments of children
             ans[v] = max(right[l(v)] + left[r(v)], max(ans[l(v)], ans[r(v)]));
-            sum[v] = sum[l(v)] = sum[r(v)];
+            sum[v] = sum[l(v)] + sum[r(v)];
             left[v] = max(left[l(v)], sum[l(v)] + left[r(v)]);
             right[v] = max(right[r(v)], sum[r(v)] + right[l(v)]);
         }
 
-        /*cout << "building tree: " << endl;*/
-        /*cout << v << " goes from " << tl << " to " << tr << ", ";*/
-        /*cout << "left=" << left[v] << ", ";*/
-        /*cout << "tree=" << tree[v] << ", ";*/
-        /*cout << "right=" << right[v] << endl;*/
+        cout << "building tree: " << endl;
+        cout << v << " goes from " << tl << " to " << tr << ", ";
+        cout << "ans=" << ans[v] << ", ";
+        cout << "sum=" << sum[v] << ", ";
+        cout << "left=" << left[v] << ", ";
+        cout << "right=" << right[v] << endl;
 
     }
 
@@ -93,6 +94,8 @@ struct SegmentTree {
         answer.left = max(left_query.left, left_query.sum + right_query.left);
         answer.right = max(right_query.right, right_query.sum + left_query.right);
 
+        cout << "query from tl=" << tl << " to tr=" << tr << "returned";
+
         return answer;
     }
 
@@ -118,7 +121,7 @@ int main() {
         l--; r--;
 
         ll query = segtree.query(1, 0, n-1, l, r).ans;
-        /*cout << max(0ll, query) << endl;*/
+        cout << max(0ll, query) << endl;
         ans += max(0ll, query);
     }
     cout << ans << endl;
