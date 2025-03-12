@@ -13,7 +13,7 @@ typedef vector<ll> vll;
 typedef vector<vll> vvll;
 
 struct node {
-    ll max;
+    ll ans;
     ll sum;
     ll left;
     ll right;
@@ -21,14 +21,14 @@ struct node {
 
 struct SegmentTree {
 
-    vll max;
+    vll ans;
     vll sum;
     vll left;
     vll right;
 
     // public function to build segtree: a: input array
     void build(const vll &a) {
-        max.resize(4 * a.size());
+        ans.resize(4 * a.size());
         sum.resize(4 * a.size());
         left.resize(4 * a.size());
         right.resize(4 * a.size());
@@ -45,32 +45,20 @@ struct SegmentTree {
     // tr: right boundary of current seg
     void build(const vll &a, int v, int tl, int tr) {
         if (tl == tr) {
-            max[v] = a[tl];
+            ans[v] = a[tl];
             sum[v] = a[tl];
+            left[v] = a[tl];
+            right[v] = a[tl];
         } else {
             int tm = (tl + tr) / 2;
             build(a, v*2, tl, tm);
             build(a, v*2+1, tm+1, tr);
 
-            // your operation goes here
             // combine both largest segments of children
-            max[v] = max[l(v)] + max[r(v)] + right[l(v)] + left[r(v)];
-            left[v] = left[l(v)];
-            right[v] = right[r(v)];
-
-            // if left segment is better
-            if (max[l(v)] > max[v]) {
-                left[v] = left[l(v)];
-                max[v] = max[l(v)];
-                right[v] = right[r(v)] + max[r(v)] + left[r(v)] + right[l(v)];
-            }
-
-            // if right segment is better
-            if (max[r(v)] > max[v]) {
-                left[v] = left[l(v)] + max[l(v)] + right[l(v)] + left[r(v)];
-                max[v] = max[r(v)];
-                right[v] = right[r(v)];
-            }
+            ans[v] = max(right[l(v)] + left[r(v)], max(ans[l(v)], ans[r(v)]));
+            sum[v] = sum[l(v)] = sum[r(v)];
+            left[v] = max(left[l(v)], sum[l(v)] + left[r(v)]);
+            right[v] = max(right[r(v)], sum[r(v)] + right[l(v)]);
         }
 
         /*cout << "building tree: " << endl;*/
@@ -88,42 +76,22 @@ struct SegmentTree {
     // tr: right boundary of current seg
     // l: left bound of query
     // r: right bound of query
-    array<ll, 3> query(int v, int tl, int tr, int l, int r) {
+    node query(int v, int tl, int tr, int l, int r) {
         if (l > r) 
-            return array<ll, 3>();
+            return node();
         if (l == tl && r == tr) {
-            return {left[v], max[v], right[v]};
+            return {left[v], ans[v], right[v]};
         }
         int tm = (tl + tr) / 2;
     
         auto left_query = query(v*2, tl, tm, l, min(r, tm));
         auto right_query = query(v*2+1, tm+1, tr, max(l, tm+1), r);
 
-        array<ll, 3> answer;
-
-        // combine both largest segments of children
-        answer[0] = left_query[0];
-        answer[1] = left_query[1] + right_query[1] + left_query[2] + right_query[0];
-        answer[2] = right_query[2];
-
-        // if left segment is better
-        if (left_query[1] > answer[1]) {
-            answer[0] = left_query[0];
-            answer[1] = left_query[1];
-            answer[2] = right_query[2] + right_query[1] + right_query[0] + left_query[2];
-        }
-
-        // if right segment is better
-        if (right_query[1] > answer[1]) {
-            answer[0] = left_query[0] + left_query[1] + left_query[2] + right_query[0];
-            answer[1] = right_query[1];
-            answer[2] = right_query[2];
-        }
-
-        /*cout << "query at " << tl << " to " << tr << " returned ";*/
-        /*cout << answer[0] << ", ";*/
-        /*cout << answer[1] << ", ";*/
-        /*cout << answer[2] << endl;*/
+        node answer;
+        answer.ans = max(left_query.right + right_query.left, max(left_query.ans, right_query.ans));
+        answer.sum = left_query.sum + right_query.sum;
+        answer.left = max(left_query.left, left_query.sum + right_query.left);
+        answer.right = max(right_query.right, right_query.sum + left_query.right);
 
         return answer;
     }
@@ -149,7 +117,7 @@ int main() {
         cin >> l >> r;
         l--; r--;
 
-        ll query = segtree.query(1, 0, n-1, l, r)[1];
+        ll query = segtree.query(1, 0, n-1, l, r).ans;
         /*cout << max(0ll, query) << endl;*/
         ans += max(0ll, query);
     }
