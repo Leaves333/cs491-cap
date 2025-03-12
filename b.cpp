@@ -1,5 +1,3 @@
-#include <algorithm>
-#include <utility>
 #pragma optimize("O3")
 
 #include <bits/stdc++.h>
@@ -13,6 +11,8 @@ typedef vector<int> vi;
 typedef vector<vi> vvi;
 typedef vector<ll> vll;
 typedef vector<vll> vvll;
+
+vll original_values;
 
 struct SegmentTree {
 
@@ -186,14 +186,14 @@ struct SegmentTree {
 };
 
 // do an inorder traversal of the tree
-pii dfs(int x, int p, const vll &nums, const vvi &edges, vll &ordering, vector<pii> &ranges) {
+pii dfs(int x, int p, const vvi &edges, vll &ordering, vector<pii> &ranges) {
 
     int left = INT_MAX;
     int right = INT_MIN;
 
     for (auto dest : edges[x]) {
-        if (dest != p && nums[dest] < nums[x]) {
-            auto bounds = dfs(dest, x, nums, edges, ordering, ranges);
+        if (dest != p && original_values[dest] < original_values[x]) {
+            auto bounds = dfs(dest, x, edges, ordering, ranges);
             left = min(left, bounds.first);
             right = max(right, bounds.second);
         }
@@ -201,11 +201,11 @@ pii dfs(int x, int p, const vll &nums, const vvi &edges, vll &ordering, vector<p
 
     left = min(left, (int) ordering.size());
     right = max(right, (int) ordering.size());
-    ordering.push_back(nums[x]);
+    ordering.push_back(original_values[x]);
 
     for (auto dest : edges[x]) {
-        if (dest != p && nums[dest] > nums[x]) {
-            auto bounds = dfs(dest, x, nums, edges, ordering, ranges);
+        if (dest != p && original_values[dest] > original_values[x]) {
+            auto bounds = dfs(dest, x, edges, ordering, ranges);
             left = min(left, bounds.first);
             right = max(right, bounds.second);
         }
@@ -220,9 +220,9 @@ int main() {
 
     int n, m;
     cin >> n >> m;
-    vll nums(n);
+    original_values.resize(n);
     for (int i = 0; i < n; i++) {
-        cin >> nums[i];
+        cin >> original_values[i];
     }
 
     vvi edges(n);
@@ -235,7 +235,7 @@ int main() {
 
     vector<pii> ranges(n);
     vll ordering;
-    dfs(0, -1, nums, edges, ordering, ranges);
+    dfs(0, -1, edges, ordering, ranges);
 
     SegmentTree segtree;
     segtree.init_tree(ordering);
@@ -244,7 +244,5 @@ int main() {
         char op;
         int v, k;
         cin >> op >> v >> k;
-
-        
     }
 }

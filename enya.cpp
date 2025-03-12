@@ -1,124 +1,163 @@
 #pragma GCC optimize("O3,unroll-loops")
-#include <vector>
-#include <cmath>
-#include <iostream>
-#include <map>
+#include <bits/stdc++.h>
 using namespace std;
 typedef long long ll;
 using vl = vector<ll>;
 
-int n;
-int block_size;
-vl original_arr;
-vl block;
-map<int, int> block_sizes; // index, size of block
-vl intervals; // this will keep the left end of the intervals
+vector<ll> lazy;
 
-ll lowbit(ll x) {
-    return x & -x;
+struct node {
+    ll max;
+    ll sum;
+};
+
+int getMid(int l, int r) {
+    return l + (r - l) / 2;
 }
 
-ll query(int l, int r) {
-    ll sum = 0;
-    int curr = -1;
-    int i = 0;
-
-    // first block that can be used
-    while (i + 1 < intervals.size() && intervals[i + 1] <= l) {
-        i++;
+// ss - starting index of segment tree
+// se - ending index of segment tree
+// qs - starting index of query
+// qe - ending index of query
+struct node MaxUntill(struct node* st, int ss, int se, int qs, int qe, int si) {
+    struct node temp, left, right;
+    if (lazy[si] != 0) {
+        st[si].max += lazy[si];
+        if (ss != se) {
+            lazy[2 * si + 1] += lazy[si];
+            lazy[2 * si + 2] += lazy[si];
+        }
+        lazy[si] = 0;   
     }
+    if (ss > se || ss > qe || se < qs) { //out of range
+        temp.max = 0;
+        return temp;
+    } 
 
-    // first block (partial sum before a full block starts)
-    bool used = false;
-    while (l < intervals[i]) {
-        sum += original_arr[l] * curr;
-        l++;
-        used = true;
-    }
-
-    if (used) {
-        curr *= -1;
-    }
-
-    // overlapping middle blocks
-    used = false;
-    while (l < intervals.size() && intervals[i] + block_sizes[intervals[i]] <= r) {
-        sum += block[intervals[i]] * curr;
-        l += block_sizes[intervals[i]];
-        i++;
-        curr *= -1;
-        used = true;
+    // if segment is in range, return the node
+    if (qs <= ss && qe >= se) {
+        return st[si];
     }
 
-    if (!used) {
-        curr = -1;
-    }
-    // last block
-    while (l <= r) {
-        sum += original_arr[l] * curr;
-        l++;
-    }
-    return sum;
+    // if part of the segment is in range
+    int mid = getMid(ss, se);
+    left = MaxUntill(st, ss, mid, qs, qe, 2 * si + 1);
+    right = MaxUntill(st, mid + 1, se, qs, qe, 2 * si + 2);
+
+    temp.max = max(left.max, right.max);
+    return temp;
 }
 
-ll brute_force_query(int l, int r) {
-    ll ret = 0;
-    for (int i = l; i <= r; i++) {
-        // we have to add 1 because we subtract 1 from the indices
-        // before calling this function
-        ll arg = (l + 1) ^ ((i + 1) / block_size);
-        ll exp = lowbit(arg);
-
-        if (exp % 2 == 0)
-            ret += original_arr[i];
-        else
-            ret += original_arr[i] * -1;
+// si - index of current node in segment tree
+void constructSTUtil(ll arr[], int ss, int se, struct node* st, int si) {
+    if (ss == se) {
+        st[si].max = arr[ss];
+        st[si].sum = arr[ss];
+        return; 
     }
-    return ret;
+    int mid = getMid(ss, se);
+    constructSTUtil(arr, ss, mid, st, si * 2 + 1);
+    constructSTUtil(arr, mid + 1, se, st, si * 2 + 2);
+    st[si].max = max(st[si * 2 + 1].max, st[si * 2 + 2].max);
+    st[si].sum = st[si * 2 + 1].sum + st[si * 2 + 2].sum;
 }
 
-int main() {
+struct node* constructST(ll arr[], int n) {
+    int height = (int)(ceil(log2(n)));
+    int maxSize = 2 * (int)pow(2, height) - 1;
+    struct node* st = new struct node[maxSize];
+    constructSTUtil(arr, 0, n - 1, st, 0);
+    return st;
+}
+
+// updating a range
+// qs - query start
+// qe - query end
+// add - amount to add
+// si - segment index
+void update(struct node* st, int ss, int se, int qs, int qe, ll add, int si) {
+    if (lazy[si] != 0) {
+        st[si].max += lazy[si];
+        st[si].sum += lazy[si] * (se - ss + 1);
+        if (ss != se) {
+            lazy[2 * si + 1] += lazy[si];
+            lazy[2 * si + 2] += lazy[si];
+        }
+        lazy[si] = 0;
+    }   
+    if (ss > se || ss > qe || se < qs) {
+        return;
+    } 
+    if (ss >= qs && se <= qe) {
+        st[si].max += add;
+        st[si].sum += add * (se - ss + 1);
+
+        if (ss != se) {
+            lazy[2 * si + 1] += add;
+            lazy[2 * si + 2] += add;
+        }
+        return;     
+    }
+
+    int mid = getMid(ss, se);
+    update(st, ss, mid, qs, qe, add, 2 * si + 1);
+    update(st, mid + 1, se, qs, qe, add, 2 * si + 2);
+
+    st[si].max = max(st[2 * si + 1].max, st[2 * si + 2].max);
+    st[si].sum = st[2 * si + 1].sum + st[2 * si + 2].sum;
+    
+}
+
+ll getSum(struct node* st, int ss, int se, int qs, int qe, int si) {
+    if (lazy[si] != 0) {
+        st[si].sum += lazy[si] * (se - ss + 1);
+        if (ss != se) {
+            lazy[2 * si + 1] += lazy[si];
+            lazy[2 * si + 2] += lazy[si];
+        }
+        lazy[si] = 0;   
+    }
+    if (ss > se || ss > qe || se < qs) {
+        return 0;
+    } 
+
+    if (ss>=qs && se<=qe) {
+        return st[si].sum;
+    }
+    int mid = getMid(ss, se);
+    return getSum(st, ss, mid, qs, qe, 2*si+1) + getSum(st, mid+1, se, qs, qe, 2*si+2);
+}
+int main() {    
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    int m;
-    cin >> n >> m;
-    block_size = sqrt(n);
-    original_arr.resize(n);
-    block.resize(n);
-    for (int i = 0; i < n; i++) {
-        ll temp;
-        cin >> temp;
-        original_arr[i] = temp;
-    }
+    int n, k; 
+    cin >> n >> k;
 
+    ll* arr = new ll[n]();
+     // if lazy[i] == 0, there are no pending changes, 
+                            // otherwise, lazy[i] stands for the amount that needs to be added to node i 
+    fill_n(arr, n, 0);
+    lazy.resize(4 * n, 0); // needs 4 * n nodes in worst case 
 
-    // making the blocks
-    int prev = 0;
-    int size = 0;
-    int block_index = -1;
-    intervals.push_back(0);  
-    for (int i = 0; i < n; i++) {  
-        block_index = floor((i + 1) / sqrt(n));  
-        block[block_index] += original_arr[i];  
-    
-        if (block_index != prev) {  
-            intervals.push_back(i);  
-            block_sizes[prev] = size;  
-            size = 0;
-            prev = block_index;
+    struct node* segmentTree = constructST(arr, n); 
+
+    while (k--) {
+        string str;
+        ll l, r;
+        cin >> str >> l >> r;
+        l--;
+        r--;
+        // cout << str << endl;
+        if (str == "Add") {
+            ll v;
+            cin >> v;
+
+            update(segmentTree, 0, n - 1, l, r, v, 0);
+        } else if (str == "Max") {
+            cout << MaxUntill(segmentTree, 0, n - 1, l, r, 0).max << "\n";
+        } else if (str == "Sum") {
+            cout << getSum(segmentTree, 0, n - 1, l, r, 0) << "\n";
         }
-        size++;
     }
-    block_sizes[prev] = size;
-
-
-    for (int i = 0; i < m; i++) {
-        int l, r;
-        cin >> l >> r;
-        cout << "query says " << query(l - 1, r - 1) << endl;
-        cout << "brute force says " << brute_force_query(l - 1, r - 1) << endl;
-    }
-
-    
 }

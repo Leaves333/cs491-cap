@@ -12,15 +12,24 @@ typedef vector<vi> vvi;
 typedef vector<ll> vll;
 typedef vector<vll> vvll;
 
+struct node {
+    ll max;
+    ll sum;
+    ll left;
+    ll right;
+};
+
 struct SegmentTree {
 
-    vll tree;
+    vll max;
+    vll sum;
     vll left;
     vll right;
 
     // public function to build segtree: a: input array
     void build(const vll &a) {
-        tree.resize(4 * a.size());
+        max.resize(4 * a.size());
+        sum.resize(4 * a.size());
         left.resize(4 * a.size());
         right.resize(4 * a.size());
         build(a, 1, 0, a.size()-1);
@@ -36,7 +45,8 @@ struct SegmentTree {
     // tr: right boundary of current seg
     void build(const vll &a, int v, int tl, int tr) {
         if (tl == tr) {
-            tree[v] = a[tl];
+            max[v] = a[tl];
+            sum[v] = a[tl];
         } else {
             int tm = (tl + tr) / 2;
             build(a, v*2, tl, tm);
@@ -44,20 +54,22 @@ struct SegmentTree {
 
             // your operation goes here
             // combine both largest segments of children
-            tree[v] = tree[l(v)] + tree[r(v)] + right[l(v)] + left[r(v)];
+            max[v] = max[l(v)] + max[r(v)] + right[l(v)] + left[r(v)];
             left[v] = left[l(v)];
             right[v] = right[r(v)];
 
             // if left segment is better
-            if (tree[l(v)] > tree[v]) {
-                tree[v] = tree[l(v)];
-                right[v] = right[r(v)] + tree[r(v)] + left[r(v)] + right[l(v)];
+            if (max[l(v)] > max[v]) {
+                left[v] = left[l(v)];
+                max[v] = max[l(v)];
+                right[v] = right[r(v)] + max[r(v)] + left[r(v)] + right[l(v)];
             }
 
             // if right segment is better
-            if (tree[r(v)] > tree[v]) {
-                tree[v] = tree[r(v)];
-                left[v] = left[l(v)] + tree[l(v)] + right[l(v)] + left[r(v)];
+            if (max[r(v)] > max[v]) {
+                left[v] = left[l(v)] + max[l(v)] + right[l(v)] + left[r(v)];
+                max[v] = max[r(v)];
+                right[v] = right[r(v)];
             }
         }
 
@@ -80,7 +92,7 @@ struct SegmentTree {
         if (l > r) 
             return array<ll, 3>();
         if (l == tl && r == tr) {
-            return {left[v], tree[v], right[v]};
+            return {left[v], max[v], right[v]};
         }
         int tm = (tl + tr) / 2;
     
@@ -88,22 +100,24 @@ struct SegmentTree {
         auto right_query = query(v*2+1, tm+1, tr, max(l, tm+1), r);
 
         array<ll, 3> answer;
-        // your operation goes here
+
         // combine both largest segments of children
-        answer[1] = left_query[1] + right_query[1] + left_query[2] + right_query[0];
         answer[0] = left_query[0];
+        answer[1] = left_query[1] + right_query[1] + left_query[2] + right_query[0];
         answer[2] = right_query[2];
 
         // if left segment is better
         if (left_query[1] > answer[1]) {
+            answer[0] = left_query[0];
             answer[1] = left_query[1];
             answer[2] = right_query[2] + right_query[1] + right_query[0] + left_query[2];
         }
 
         // if right segment is better
         if (right_query[1] > answer[1]) {
-            answer[1] = right_query[1];
             answer[0] = left_query[0] + left_query[1] + left_query[2] + right_query[0];
+            answer[1] = right_query[1];
+            answer[2] = right_query[2];
         }
 
         /*cout << "query at " << tl << " to " << tr << " returned ";*/
@@ -136,7 +150,7 @@ int main() {
         l--; r--;
 
         ll query = segtree.query(1, 0, n-1, l, r)[1];
-        cout << max(0ll, query) << endl;
+        /*cout << max(0ll, query) << endl;*/
         ans += max(0ll, query);
     }
     cout << ans << endl;
