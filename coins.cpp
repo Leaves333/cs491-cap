@@ -1,6 +1,3 @@
-#include <chrono>
-#pragma optimize("O3")
-
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -14,38 +11,44 @@ typedef vector<ll> vll;
 typedef vector<vll> vvll;
 
 const ll MOD = 998244353;
+struct matrix {
+    ll arr[100][100];
+};
 
-vvll multiply_matrices(const vvll &first, const vvll &second) {
-    vvll res(first.size(), vll(first.size()));
-    for (int i = 0; i < first.size(); i++) {
-        for (int j = 0; j < first[0].size(); j++) {
+matrix multiply_matrices(const matrix &first, const matrix &second) {
+    matrix res;
+    memset(res.arr, 0, sizeof(res.arr));
+    for (int i = 0; i < 100; i++) {
+        for (int j = 0; j < 100; j++) {
             ll sum = 0;
-            for (int k = 0; k < first[0].size(); k++) {
-                sum += first[i][k] * second[k][j];
+            for (int k = 0; k < 100; k++) {
+                sum += first.arr[i][k] * second.arr[k][j];
                 sum %= MOD;
             }
-            res[i][j] = sum;
+            res.arr[i][j] = sum;
         }
     }
     return res;
 }
 
-vvll pow_mod(vvll base, ll exp) {
+matrix pow_mod(matrix base, ll exp) {
 
-    if (exp == 0) {
-        vvll identity(base.size(), vll(base.size()));
-        for (int i = 0; i < base.size(); i++) {
-            identity[i][i] = 1;
+    matrix res;
+    memset(res.arr, 0, sizeof(res.arr));
+    for (int i = 0; i < 100; i++) {
+        res.arr[i][i] = 1;
+    }
+
+    while (exp > 0) {
+        if (exp & 1) {
+            res = multiply_matrices(res, base);
         }
-        return identity;
+        base = multiply_matrices(base, base);
+        exp >>= 1;
     }
 
-    vvll t = pow_mod(base, exp / 2);
-    if (exp % 2 == 0) {
-        return multiply_matrices(t, t);
-    } else {
-        return multiply_matrices(t, multiply_matrices(t, base));
-    }
+    return res;
+
 }
 
 int main() {
@@ -53,7 +56,6 @@ int main() {
 
     ll n;
     cin >> n;
-    auto start = chrono::high_resolution_clock::now();
 
     vll base_values = {
         1,         1,         1,         1,         1,         2,
@@ -74,35 +76,33 @@ int main() {
         402114808, 523031874, 261804085, 104343078, 158286247, 523686981,
         515025136, 32913847,  503163636, 952075488,
     }; // precompute f(0) to f(99)
-    reverse(base_values.begin(), base_values.end());
 
     // initialize the base matrix with precomputed values
-    vvll base_matrix(100, vll(100));
+    matrix base_matrix;
+    memset(base_matrix.arr, 0, sizeof(base_matrix.arr));
     for (int i = 0; i < 100; i++) {
-        base_matrix[i][0] = base_values[i];
+        base_matrix.arr[i][0] = base_values[99 - i];
     }
 
     // defining the recurrence relation
-    vvll pow_matrix(100, vll(100));
+    matrix pow_matrix;
+    memset(pow_matrix.arr, 0, sizeof(pow_matrix.arr));
     for (int i = 0; i < 99; i++) {
-        pow_matrix[i + 1][i] = 1;
+        pow_matrix.arr[i + 1][i] = 1;
     }
-    pow_matrix[0][0] = 1;
-    pow_matrix[0][4] = 1;
-    pow_matrix[0][9] = 1;
-    pow_matrix[0][24] = 1;
-    pow_matrix[0][49] = 1;
-    pow_matrix[0][99] = 1;
+    pow_matrix.arr[0][0] = 1;
+    pow_matrix.arr[0][4] = 1;
+    pow_matrix.arr[0][9] = 1;
+    pow_matrix.arr[0][24] = 1;
+    pow_matrix.arr[0][49] = 1;
+    pow_matrix.arr[0][99] = 1;
 
-    vvll ans = pow_mod(pow_matrix, n - 1);
+    matrix ans = pow_mod(pow_matrix, n - 1);
     ans = pow_mod(ans, 100);
     ans = multiply_matrices(ans, pow_matrix);
     ans = multiply_matrices(ans, base_matrix);
-    cout << ans[0][0] << endl;
+    cout << ans.arr[0][0] << endl;
 
-    auto end = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<chrono::milliseconds  >(end - start);
-    cout << duration.count() << "ms" << endl;
-
-    // cur time: 2760ms
+    // cur time: 1150ms
+    
 }
