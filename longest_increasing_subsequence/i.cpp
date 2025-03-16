@@ -24,7 +24,7 @@ int main() {
 
     vi d(n + 1, INT_MAX); // dp for finding size of lis
     vi idx(n + 1, -1); // index of each element in d
-    vi p(n + 1); // index of previous element for sequence ending at i
+    vi p(n + 1, -1); // index of previous element for sequence ending at i
     d[0] = INT_MIN;
     for (int i = 0; i < n; i++) {
         // binary search for first element greater than x
@@ -32,7 +32,7 @@ int main() {
         if (d[l-1] < nums[i] && nums[i] < d[l]) {
             d[l] = nums[i];
             idx[l] = i;
-            p[i] = l;
+            p[i] = idx[l-1];
         }
 
     }
