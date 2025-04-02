@@ -15,5 +15,20 @@ typedef vector<vll> vvll;
 int main() {
     cin.tie(0)->sync_with_stdio(0);
 
-    int n; cin >> n;
+    int t; cin >> t;
+    while (t--) {
+        int k, d;
+        string s;
+        cin >> k >> d >> s;
+
+        // substring up to i, j conversions
+        vvi dp(s.length(), vi(k));
+
+        for (int i = 0; i < s.length(); i++) {
+            for (int j = 0; j < k; j++) {
+                // convert this???
+                // don't convert this
+            }
+        }
+    }
 }
