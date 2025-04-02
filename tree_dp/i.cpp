@@ -39,8 +39,20 @@ int main() {
 
     vll dp(n + 1);
     for (int x : ordering) {
-
+        ll first = 0, second = values[x];
+        for (auto child : edges[x]) {
+            first += dp[child];
+            for (auto child_of_child : edges[child]) {
+                second += dp[child_of_child];
+            }
+        }
+        dp[x] = max(first, second);
     }
+
+    /*for (int i = 0; i < n + 1; i++) {*/
+    /*    cout << i << " : " << dp[i] << endl;*/
+    /*}*/
+    /*cout << endl;*/
 
     cout << dp[1] << endl;
 
