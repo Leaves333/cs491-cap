@@ -1,4 +1,3 @@
-#include <climits>
 #pragma optimize("O3")
 
 #include <bits/stdc++.h>
@@ -32,15 +31,18 @@ ll tsp(int mask, int cur, int n, const vvll &edges, vvll &dp) {
     if (dp[cur][mask] != -1)
         return dp[cur][mask];
 
-    ll ans = LLONG_MAX;
+    ll ans = INT_MAX;
 
     // try visiting every unvisited city
     for (int i = 0; i < n; i++) {
         if ((mask & (1 << i)) == 0) {
+            if (edges[cur][i] == -1)
+                continue;
             ans = min(ans, edges[cur][i] + tsp((mask | 1 << i), i, n, edges, dp));
         }
     }
 
+    /*cout << "tsp called with mask=" << mask << ", cur=" << cur << " returned " << ans << endl;*/
     return dp[cur][mask] = ans;
 
 }
@@ -51,14 +53,20 @@ int main() {
     int n, m;
     cin >> n >> m;
 
-    vvll edges(n+1, vll(n+1, -1));
+    vvll edges(n, vll(n, -1));
     while (m--) {
         int u, v, d;
         cin >> u >> v >> d;
+        u--;
+        v--;
         edges[u][v] = d;
         edges[v][u] = d;
     }
 
     vvll dp(n, vll(1 << n, -1));
-    cout << tsp(1, 0, n, edges, dp) << endl;
+    ll ans = INT_MAX;
+    for (int i = 0; i < n; i++) {
+        ans = min(ans, tsp(1 << i, i, n, edges, dp));
+    }
+    cout << ans << endl;
 }
