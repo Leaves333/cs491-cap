@@ -21,4 +21,5 @@ int main() {
 
     string s; cin >> s;
     vll hash_prefix(s.length() + 1);
+    vll ppow(s.length() + 1);
 }
