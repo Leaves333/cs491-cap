@@ -1,3 +1,4 @@
+#include <numeric>
 #pragma optimize("O3")
 
 #include <bits/stdc++.h>
@@ -17,23 +18,8 @@ int main() {
 
     int t; cin >> t;
     while (t--) {
-        int n; cin >> t;
-        vi nums(n);
-        for (int i = 0; i < n; i++) {
-            cin >> nums[i];
-        }
+        int a, b;
+        cin >> a >> b;
+        cout << gcd(a, b) << endl;
     }
-
-    // observations:
-    // n is always pos
-    // k-1 +, k+ => 2 2
-    // k-1 -, k+ => 1 2
-    // k-1 +, k- => 1 0
-    // k-1 -, k- => 0 0
-    //
-    // 1  2 -3  4  5
-    // 4  4  2  5  5
-    //
-    // 1  2 -3  4
-    // 3  3  1  4
 }

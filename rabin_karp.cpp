@@ -50,7 +50,6 @@ int main() {
             if (hash < 0)
                 hash += MOD;
             ll inverse = pow_mod(ppow[i], MOD - 2);
-            cout << "hash=" << hash << ", inverse=" << inverse << endl;
             hash = (hash * inverse) % MOD;
             count[hash]++;
         }
@@ -59,7 +58,6 @@ int main() {
     // compute number of pairs
     ll ans = 0;
     for (const auto &[key, value] : count) {
-        cout << "hash=" << key << ", count=" << value << endl;
         ans += value * (value - 1);
     }
     cout << ans / 2 << endl;
