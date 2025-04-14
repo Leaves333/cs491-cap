@@ -1,5 +1,1 @@
-5
-3 -2 1 5 -4
-+ + * + *
-
-dp[i][j] stores the max if you do all operations between i and j?
+aabaaaba
