@@ -33,6 +33,24 @@ ll pow_mod(ll x, ll n) {
         return (t * t) % MOD;
 }
 
+ll get_p_hash(string s) {
+    ll p_hash = 0;
+    for (int i = 0; i < s.length(); i++) {
+        p_hash += (s[i] - 'A' + 1) * p_pow[i];
+        p_hash %= MOD;
+    }
+    return p_hash;
+}
+
+ll get_q_hash(string s) {
+    ll q_hash = 0;
+    for (int i = 0; i < s.length(); i++) {
+        q_hash += (s[i] - 'A' + 1) * q_pow[i];
+        q_hash %= MOD;
+    }
+    return q_hash;
+}
+
 ll hashify(string s) {
     ll p_hash = 0, q_hash = 0;
     for (int i = 0; i < s.length(); i++) {
@@ -43,6 +61,7 @@ ll hashify(string s) {
     }
     return p_hash | (q_hash << 32);
 }
+
 
 int main() {
     cin.tie(0)->sync_with_stdio(0);
@@ -64,6 +83,7 @@ int main() {
     unordered_set<ll> dictionary_words;
     for (int i = 0; i < m; i++) {
         string s; cin >> s;
+        ll hash = get_p_hash(s) | (get_q_hash(s) << 32);
         dictionary_words.insert(hashify(s));
     }
 
@@ -72,26 +92,21 @@ int main() {
         cin >> tokens[i];
     }
 
-    vector<ll> token_hashes(n + 1, 0); // hash each prefix of tokens
+    vector<ll> p_prefix(n + 1, 0);
+    vector<ll> q_prefix(n + 1, 0);
     vector<ll> length(n + 1, 0);       // length of first n elements
     for (int i = 0; i < n; i++) {
         length[i + 1] = length[i] + tokens[i].length();
 
-        // shift current hash down
-        ll cur_hash = token_hashes[i];
-        ll cur_p = cur_hash % (1ll << 32);
-        ll cur_q = cur_hash >> 32;
-
-        // merge with the hash of the new token
-        ll token_hash = hashify(tokens[i]);
-        ll token_p = token_hash % (1ll << 32);
-        ll token_q = token_hash >> 32;
+        // get hash of the token
+        ll token_p = get_p_hash(tokens[i]);
+        ll token_q = get_q_hash(tokens[i]);
         token_p = (token_p * p_pow[length[i]]) % MOD;
         token_q = (token_q * q_pow[length[i]]) % MOD;
 
-        cur_p = (cur_p + token_p) % MOD;
-        cur_q = (cur_q + token_q) % MOD;
-        token_hashes[i + 1] = cur_p | (cur_q << 32);
+        // add it to the previous hash
+        p_prefix[i + 1] = (p_prefix[i] + token_p) % MOD;
+        q_prefix[i + 1] = (q_prefix[i] + token_q) % MOD;
     }
     
     /*cout << "here's token hashes: " << endl;*/
@@ -118,19 +133,15 @@ int main() {
             // update the word
             cur_word = tokens[j] + cur_word;
 
-            // compute hash using prefix sum
-            ll top_hash = token_hashes[i + 1];
-            ll top_p = top_hash % (1ll << 32);
-            ll top_q = top_hash >> 32;
+            // no words longer than 100 chars
+            if (cur_word.length() > 100)
+                break;
 
-            ll bottom_hash = token_hashes[j]; 
-            ll bottom_p = bottom_hash % (1ll << 32);
-            ll bottom_q = bottom_hash >> 32;
-
-            ll cur_p = (top_p - bottom_p);
+            // compute hash
+            ll cur_p = (p_prefix[i + 1] - p_prefix[j]);
             if (cur_p < 0)
                 cur_p += MOD;
-            ll cur_q = (top_q - bottom_q);
+            ll cur_q = (q_prefix[i + 1] - q_prefix[j]);
             if (cur_q < 0)
                 cur_q += MOD;
             cur_p = (cur_p * p_inverse[length[j]]) % MOD;
@@ -145,6 +156,7 @@ int main() {
 
             word[i + 1] = cur_word;
             dp[i + 1] = j;
+            break;
 
         }
     }
